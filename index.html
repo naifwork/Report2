@@ -364,6 +364,39 @@
           <button onclick="applyInjectedCode()" class="flex-1 bg-sky-600 hover:bg-sky-500 text-white text-xs font-black py-1.5 px-3 rounded-lg transition flex items-center justify-center gap-1.5 shadow">
             <i class="fa-solid fa-play"></i> تطبيق الكود فوراً على الورقة
           </button>
+
+          <!-- أدوات ضبط حجم ونمط خط النصوص بنمط التحديد التفاعلي الذكي (Pick & Target) -->
+          <div id="canvasTextControls" class="flex items-center gap-1 bg-slate-900 border border-slate-700 px-2 py-1 rounded-lg flex-wrap">
+            <span class="text-[9px] font-bold text-sky-300 flex items-center gap-1">
+              <i class="fa-solid fa-font"></i> الخط:
+            </span>
+            
+            <!-- قائمة النطاق المدمجة بخيار التحديد المباشر -->
+            <select id="canvasTextScope" onchange="onScopeChange(this.value)" class="bg-slate-800 text-sky-200 text-[8.5px] font-bold rounded px-1.5 py-0.5 outline-none border border-slate-600 cursor-pointer">
+              <option value="all">الكل</option>
+              <option value="headings">العناوين فقط</option>
+              <option value="body">النصوص فقط</option>
+              <option value="custom" id="optCustomTarget">🎯 الجزء المحدد (انقر للاختيار)</option>
+            </select>
+
+            <!-- زر أداة مؤشر التحديد التفاعلي -->
+            <button type="button" onclick="togglePickerMode()" id="canvasPickerBtn" class="px-2 py-0.5 rounded text-[8.5px] font-black bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-600 transition flex items-center gap-1" title="تفعيل الفأرة للنقر على أي جزء داخل الورقة لتخصيصه بمفرده">
+              <i class="fa-solid fa-crosshairs"></i>
+              <span id="pickerBtnText">تحديد جزء</span>
+            </button>
+
+            <!-- شارة تبين اسم الجزء النشط حالياً -->
+            <span id="pickedTargetBadge" class="hidden text-[8px] font-bold bg-emerald-950 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-600 animate-pulse">جزء مخصص ✓</span>
+
+            <!-- أزرار الحجم -->
+            <button type="button" onclick="adjustCanvasFontSize(1)" class="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 transition" title="تكبير الحجم للنطاق أو الجزء المختار">A+</button>
+            <button type="button" onclick="adjustCanvasFontSize(-1)" class="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 transition" title="تصغير الحجم للنطاق أو الجزء المختار">A-</button>
+            <button type="button" onclick="resetCanvasFontSize()" class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 transition" title="استعادة الحجم الأصلي">الأصل</button>
+            <span class="w-[1px] h-3 bg-slate-700 mx-0.5"></span>
+            
+            <!-- زر التسويد المنفصل -->
+            <button type="button" onclick="toggleCanvasFontWeight()" id="canvasBoldBtn" class="px-2 py-0.5 rounded text-[9px] font-black bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-600 transition" title="تبديل الخط العريض (Bold)">B عريض</button>
+          </div>
           
           <!-- أدوات إرفاق الصور والتحكم بحجمها (تظهر تلقائياً عند وجود صور) -->
           <div id="imageControlsWrapper" class="hidden flex items-center gap-1.5 flex-wrap">
@@ -609,8 +642,186 @@
       showToast("تم تفريغ الورقة واستعادة الحالة النظيفة.");
     }
 
+    // محرك التحديد التفاعلي الحر (Pick & Target Mode) للتحكم بأي جزء بحد ذاته
+    let canvasFontDeltas = { all: 0, headings: 0, body: 0 };
+    let canvasBoldStates = { all: false, headings: false, body: false };
+    let isPickerActive = false;
+    let currentlyPickedElement = null;
+
+    function onScopeChange(val) {
+      if (val === 'custom') {
+        if (!currentlyPickedElement) {
+          togglePickerMode(true);
+        }
+      } else {
+        clearPickedHighlight();
+      }
+    }
+
+    function togglePickerMode(forceOn = null) {
+      isPickerActive = forceOn !== null ? forceOn : !isPickerActive;
+      const btn = document.getElementById("canvasPickerBtn");
+      const btnText = document.getElementById("pickerBtnText");
+      const canvas = document.getElementById("dynamicPageCanvas");
+
+      if (isPickerActive) {
+        btn.className = "px-2 py-0.5 rounded text-[8.5px] font-black bg-emerald-600 text-white border border-emerald-400 transition flex items-center gap-1 shadow animate-pulse";
+        if (btnText) btnText.textContent = "انقر على أي جزء بالورقة";
+        if (canvas) canvas.style.cursor = "crosshair";
+        showToast("🎯 وضع التحديد نشط: انقر الآن على أي فقرة، جدول، أو بطاقة داخل الورقة");
+      } else {
+        btn.className = "px-2 py-0.5 rounded text-[8.5px] font-black bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-600 transition flex items-center gap-1";
+        if (btnText) btnText.textContent = currentlyPickedElement ? "تغيير الجزء" : "تحديد جزء";
+        if (canvas) canvas.style.cursor = "default";
+      }
+    }
+
+    function clearPickedHighlight() {
+      if (currentlyPickedElement) {
+        currentlyPickedElement.classList.remove("ring-2", "ring-emerald-500", "ring-offset-2", "rounded-md");
+      }
+      const badge = document.getElementById("pickedTargetBadge");
+      if (badge) badge.classList.add("hidden");
+    }
+
+    // التقاط الجزء المنقور عليه برمجياً داخل مساحة العمل
+    document.addEventListener("click", function(e) {
+      if (!isPickerActive) return;
+      const canvas = document.getElementById("dynamicPageCanvas");
+      if (!canvas || !canvas.contains(e.target)) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      // تحديد الحاوية الأنسب للعنصر المنقور عليه (فقرة، صندوق، جدول، أو خلية)
+      let target = e.target.closest("table, [class*='card'], [class*='box'], [class*='kpi'], p, h1, h2, h3, h4, h5, h6, ul, ol, div:not(#dynamicPageCanvas)") || e.target;
+
+      clearPickedHighlight();
+      currentlyPickedElement = target;
+      currentlyPickedElement.classList.add("ring-2", "ring-emerald-500", "ring-offset-2", "rounded-md");
+
+      const scopeSelect = document.getElementById("canvasTextScope");
+      if (scopeSelect) scopeSelect.value = "custom";
+
+      const badge = document.getElementById("pickedTargetBadge");
+      if (badge) {
+        const tagName = target.tagName.toLowerCase();
+        const label = tagName.startsWith("h") ? "عنوان" : tagName === "table" ? "جدول" : tagName === "p" ? "فقرة" : "عنصر مخصص";
+        badge.textContent = `🎯 ${label} محدد`;
+        badge.classList.remove("hidden");
+      }
+
+      togglePickerMode(false);
+      showToast("تم تثبيت التحديد بنجاح! استخدم أزرار (A+ / A- / B) لتعديله بمفرده");
+    }, true);
+
+    function getTargetTextElements(scope) {
+      const canvas = document.getElementById("dynamicPageCanvas");
+      if (!canvas) return [];
+
+      if (scope === "custom") {
+        if (!currentlyPickedElement) return [];
+        const innerTexts = currentlyPickedElement.querySelectorAll("p, span, h1, h2, h3, h4, h5, h6, td, th, li, strong");
+        return innerTexts.length ? Array.from(innerTexts) : [currentlyPickedElement];
+      } else if (scope === "headings") {
+        return canvas.querySelectorAll("h1, h2, h3, h4, h5, h6, th, [class*='font-black'], [class*='font-bold']:not(p):not(span):not(td)");
+      } else if (scope === "body") {
+        return canvas.querySelectorAll("p, span, td, li, .evidence-caption");
+      } else {
+        return canvas.querySelectorAll("p, span, h1, h2, h3, h4, h5, h6, td, th, li, strong");
+      }
+    }
+
+    function adjustCanvasFontSize(delta) {
+      const scopeSelect = document.getElementById("canvasTextScope");
+      const scope = scopeSelect ? scopeSelect.value : "all";
+      const elements = getTargetTextElements(scope);
+
+      if (!elements.length) {
+        if (scope === "custom") {
+          showToast("يرجى الضغط على (تحديد جزء) والنقر على عنصر داخل الورقة أولاً", true);
+        } else {
+          showToast("لا توجد عناصر مطابقة للنطاق المختار!", true);
+        }
+        return;
+      }
+
+      const key = scope === "custom" ? (currentlyPickedElement ? currentlyPickedElement.id || "picked" : "picked") : scope;
+      canvasFontDeltas[key] = Math.max(-6, Math.min(10, (canvasFontDeltas[key] || 0) + delta));
+      const curDelta = canvasFontDeltas[key];
+
+      elements.forEach(el => {
+        if (!el.dataset.origFontSize) {
+          const currentSize = parseFloat(window.getComputedStyle(el).fontSize) || 12;
+          el.dataset.origFontSize = currentSize;
+        }
+        const base = parseFloat(el.dataset.origFontSize);
+        const newSize = Math.max(7, base + curDelta);
+        el.style.fontSize = `${newSize}px`;
+        el.style.lineHeight = "1.35";
+      });
+
+      checkPageOverflow();
+      const scopeName = scope === "custom" ? "الجزء المحدد" : scope === "headings" ? "العناوين" : scope === "body" ? "النصوص" : "الكل";
+      showToast(`حجم خط ${scopeName}: ${curDelta > 0 ? '+' : ''}${curDelta}px`);
+    }
+
+    function resetCanvasFontSize() {
+      const scopeSelect = document.getElementById("canvasTextScope");
+      const scope = scopeSelect ? scopeSelect.value : "all";
+      const elements = getTargetTextElements(scope);
+
+      const key = scope === "custom" ? (currentlyPickedElement ? currentlyPickedElement.id || "picked" : "picked") : scope;
+      canvasFontDeltas[key] = 0;
+
+      elements.forEach(el => {
+        if (el.dataset.origFontSize) {
+          el.style.fontSize = `${el.dataset.origFontSize}px`;
+          el.style.lineHeight = "";
+        }
+      });
+
+      checkPageOverflow();
+      const scopeName = scope === "custom" ? "الجزء المحدد" : scope === "headings" ? "العناوين" : scope === "body" ? "النصوص" : "الكل";
+      showToast(`تمت استعادة حجم الخط الأصلي لـ (${scopeName})`);
+    }
+
+    function toggleCanvasFontWeight() {
+      const scopeSelect = document.getElementById("canvasTextScope");
+      const scope = scopeSelect ? scopeSelect.value : "all";
+      const elements = getTargetTextElements(scope);
+      const btn = document.getElementById("canvasBoldBtn");
+
+      if (!elements.length) {
+        if (scope === "custom") {
+          showToast("يرجى تحديد جزء من الورقة أولاً", true);
+        }
+        return;
+      }
+
+      const key = scope === "custom" ? (currentlyPickedElement ? currentlyPickedElement.id || "picked" : "picked") : scope;
+      canvasBoldStates[key] = !canvasBoldStates[key];
+      const isBold = canvasBoldStates[key];
+
+      elements.forEach(el => {
+        el.style.fontWeight = isBold ? "800" : "400";
+      });
+
+      if (btn) {
+        btn.className = isBold 
+          ? "px-2 py-0.5 rounded text-[9px] font-black bg-amber-500 text-slate-950 border border-amber-400 transition"
+          : "px-2 py-0.5 rounded text-[9px] font-black bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-600 transition";
+      }
+
+      checkPageOverflow();
+      const scopeName = scope === "custom" ? "الجزء المحدد" : scope === "headings" ? "العناوين" : scope === "body" ? "النصوص" : "الكل";
+      showToast(isBold ? `تم تفعيل الخط العريض لـ (${scopeName})` : `تم إلغاء الخط العريض لـ (${scopeName})`);
+    }
+
     // تطبيق وحقن الكود في مساحة الورقة مع تنفيذ السكريبتات بأمان
     function applyInjectedCode() {
+      canvasFontDelta = 0;
+      canvasIsBold = false;
       const rawText = document.getElementById("injectedCodeBox").value.trim();
       if (!rawText) {
         showToast("يرجى إدراج الكود في الصندوق أولاً!", true);
