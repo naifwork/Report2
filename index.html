@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تقرير وشاهد الأداء الوظيفي - مدرسة الموهوبين العامة بنين</title>
+
+  <!-- خط اليمامة المعتمد من Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Alyamama:wght@300;400;700;900&amp;display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Chart.js للمخططات والرسوم البيانية -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- مكتبات التصدير المباشر PDF و PNG ومولد QR Code -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    :root {
+      --gov-green: #065f46;
+      --gov-emerald: #059669;
+    }
+
+    body {
+      font-family: 'Alyamama', sans-serif;
+      background-color: #0b1329;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+    }
+
+    /* أبعاد ورقة الطباعة A4 بدقة هندسية صارمة تدعم الصفحات المتعددة عند الضرورة */
+    .a4-page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 10mm 13mm;
+      margin: 15px auto;
+      background: #ffffff;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      border-radius: 4px;
+      position: relative;
+      page-break-after: always;
+    }
+
+    /* التعديل المباشر على النصوص */
+    [contenteditable="true"] {
+      outline: none;
+      transition: background-color 0.15s ease, box-shadow 0.15s ease;
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+
+    /* سحب وضبط موضع الصور بالفأرة */
+    img.evidence-img, .evidence-card img, [data-evidence-slot] img {
+      cursor: grab;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    img.evidence-img:active, .evidence-card img:active, [data-evidence-slot] img:active {
+      cursor: grabbing;
+    }
+    body:not(.print-mode) [contenteditable="true"]:hover {
+      background-color: #f1f5f9;
+      box-shadow: 0 0 0 1px #94a3b8;
+    }
+    body:not(.print-mode) [contenteditable="true"]:focus {
+      background-color: #fefce8;
+      box-shadow: 0 0 0 1.5px #d97706;
+      color: #000000;
+    }
+
+    /* مؤشر الحالة الفارغة للمحتوى */
+    .empty-placeholder {
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 40px 20px;
+      text-align: center;
+      background: #f8fafc;
+    }
+
+    /* إعدادات الطباعة الصارمة لصفحة A4 واحدة دون أي زحف */
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    @media print {
+      body {
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      /* عزل الصفحات هندسياً في الطباعة وإلغاء أي تحجيم أو تجاور بصري */
+      #pagesWrapper {
+        display: block !important;
+        width: 100% !important;
+        transform: none !important;
+        gap: 0 !important;
+      }
+      .a4-page {
+        width: 210mm !important;
+        min-height: 297mm !important;
+        height: 297mm !important;
+        margin: 0 auto !important;
+        padding: 9mm 12mm !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        break-after: page !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+      }
+      .empty-placeholder {
+        display: none !important;
+      }
+      [contenteditable="true"]:hover, [contenteditable="true"]:focus {
+        background-color: transparent !important;
+        box-shadow: none !important;
+      }
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+
+    /* نافذة التنبيه السريع المدمجة */
+    #toastNotice {
+      visibility: hidden;
+      min-width: 240px;
+      background-color: #0f172a;
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 10px 18px;
+      position: fixed;
+      z-index: 99999;
+      left: 50%;
+      bottom: 25px;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s, bottom 0.3s;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+    #toastNotice.show {
+      visibility: visible;
+      opacity: 1;
+      bottom: 35px;
+    }
+  </style>
+</head>
+<body class="py-3 px-2">
+
+  <!-- إشعار Toast كبديل لـ alert() -->
+  <div id="toastNotice" class="flex items-center gap-2 justify-center text-xs font-bold">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMsg">تمت العملية بنجاح</span>
+  </div>
+
+  <!-- ==================== شريط التحكم والبرومبت العلوي (خارج الورقة) ==================== -->
+  <header class="no-print max-w-[210mm] mx-auto mb-3 bg-slate-900 border border-slate-800 text-white p-3 rounded-xl shadow-xl flex flex-col gap-3">
+    
+    <!-- السطر الأول: العنوان وأزرار الإجراءات الرئيسية -->
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+      <div class="flex items-center gap-2">
+        <span class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+          <i class="fa-solid fa-file-shield"></i>
+        </span>
+        <div>
+          <h1 class="text-xs font-black text-white">منصة توليد شواهد الأداء الوظيفي لشاغلي الوظائف التعليمية</h1>
+          <p class="text-[10px] text-slate-400"><br></p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <button onclick="clearAllTexts()" class="px-2.5 py-1.5 bg-rose-950/70 hover:bg-rose-900 border border-rose-800 text-rose-200 rounded-lg text-xs font-bold transition flex items-center gap-1" title="حذف وتفريغ جميع النصوص القابلة للتعديل بالكامل">
+          <i class="fa-solid fa-eraser"></i> حذف كل النصوص
+        </button>
+        <button onclick="restoreAllTexts()" class="px-2.5 py-1.5 bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-800 text-emerald-200 rounded-lg text-xs font-bold transition flex items-center gap-1" title="استعادة أو إبقاء النصوص الافتراضية">
+          <i class="fa-solid fa-rotate-left"></i> إبقاء النصوص الأصلية
+        </button>
+        <button onclick="clearCanvas()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-300 rounded-lg text-xs font-bold transition flex items-center gap-1" title="تفريغ محتوى الورقة">
+          <i class="fa-solid fa-trash-can"></i> تفريغ الورقة
+        </button>
+        <button onclick="saveAsHtmlFile()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold transition flex items-center gap-1" title="حفظ المستند كملف HTML">
+          <i class="fa-solid fa-download"></i> حفظ HTML
+        </button>
+        <button onclick="exportDirectPNG()" class="px-2.5 py-1.5 bg-violet-700 hover:bg-violet-600 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow" title="تصدير كصورة PNG عالية الدقة">
+          <i class="fa-solid fa-image"></i> تصدير PNG
+        </button>
+        <button onclick="window.print()" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-black flex items-center gap-1.5 shadow transition">
+          <i class="fa-solid fa-print"></i> طباعة A4
+        </button>
+      </div>
+    </div>
+
+    <!-- السطر الثاني: صندوق البرومبت الذكي + صندوق إدراج الكود وتطبيقه -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+      
+      <!-- 1. صندوق البرومبت المحدث بوضعين: تحليل ملفات / صياغة مباشرة بدون ملفات -->
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-1.5 flex-wrap gap-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-bold text-emerald-400 text-[11px] flex items-center gap-1">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> البرومبت:
+              </span>
+              <button onclick="switchPromptMode('files')" id="modeFilesBtn" class="text-[9.5px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white transition">تحليل مرفقات 📎</button>
+              <button onclick="switchPromptMode('text')" id="modeTextBtn" class="text-[9.5px] font-bold px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition">صياغة مباشرة ✍️</button>
+
+              <!-- زر التبديل بين صفحة واحدة وصفحتين + أدوات نسق عرض الصفحتين (تحت بعض / بجانب بعض / يمين ويسار) -->
+              <div class="flex items-center gap-1 bg-slate-900 border border-slate-700 px-1.5 py-0.5 rounded flex-wrap">
+                <i class="fa-regular fa-file-lines text-sky-400 text-[10px]"></i>
+                <button type="button" onclick="setPageCountMode(1)" id="btnPage1" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-600 text-white transition">صفحة 1</button>
+                <button type="button" onclick="setPageCountMode(2)" id="btnPage2" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition">صفحتان 2</button>
+                
+                <!-- خيارات طريقة عرض الصفحتين + أزرار الملاءمة التلقائية ونسب التكبير للشاشة -->
+                <div id="pagesArrangementControls" class="hidden flex items-center gap-1 border-r border-slate-700 pr-1.5 mr-0.5 flex-wrap">
+                  <span class="text-[8.5px] text-sky-300 font-bold">العرض:</span>
+                  <button type="button" id="btnViewVertical" onclick="setPagesArrangement('vertical')" class="text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-sky-600 text-white transition" title="عرض الصفحات تحت بعضها عمودياً">عمودي ⯅⯆</button>
+                  <button type="button" id="btnViewHorizontal" onclick="setPagesArrangement('horizontal')" class="text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition" title="عرض الصفحات بجانب بعضها ككتاب">متجاور ⯇⯈</button>
+                  <button type="button" id="btnOrderSwap" onclick="togglePagesOrder()" class="hidden text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-amber-700/80 hover:bg-amber-600 text-amber-100 transition" title="تبديل موقع الصفحة 1 بين اليمين واليسار"><span id="orderSwapLabel">ص1 يمين</span> ⇄</button>
+
+                  <!-- أزرار حجم ملاءمة الشاشة التلقائي (تعمل فقط في العرض المتجاور) -->
+                  <div id="screenFitGroup" class="hidden flex items-center gap-0.5 bg-slate-950/80 border border-slate-700 px-1 py-0.5 rounded">
+                    <span class="text-[8px] text-emerald-300 font-bold">الحجم:</span>
+                    <button type="button" onclick="applyPagesScale('auto')" id="scaleBtn_auto" class="text-[8px] font-bold px-1 py-0.5 rounded bg-emerald-600 text-white transition" title="ملاءمة تلقائية مع عرض شاشتك الحالي">تلقائي</button>
+                    <button type="button" onclick="applyPagesScale(0.9)" id="scaleBtn_90" class="text-[8px] font-bold px-1 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition">90%</button>
+                    <button type="button" onclick="applyPagesScale(0.8)" id="scaleBtn_80" class="text-[8px] font-bold px-1 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition">80%</button>
+                    <button type="button" onclick="applyPagesScale(1)" id="scaleBtn_100" class="text-[8px] font-bold px-1 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition">100%</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- قسم شواهد الصفحة الثانية: يظهر متناسقاً وبجوار خيارات نسق العرض -->
+              <div id="page2PhotoControls" class="hidden flex items-center gap-1.5 bg-emerald-950/90 border border-emerald-600/80 px-2 py-0.5 rounded flex-wrap">
+                <span class="text-[9.5px] font-black text-emerald-300 flex items-center gap-1">
+                  <i class="fa-solid fa-images"></i> شواهد ص2:
+                </span>
+                
+                <!-- 1. عدد الصور (1 إلى 8) -->
+                <select id="p2ImageCountSelect" onchange="onPage2CountSelected(this.value)" class="bg-emerald-900 text-white text-[9px] font-bold rounded px-1.5 py-0.5 outline-none border border-emerald-500 cursor-pointer">
+                  <option value="" disabled selected>العدد...</option>
+                  <option value="1">صورة (1)</option>
+                  <option value="2">صورتان (2)</option>
+                  <option value="3">3 صور</option>
+                  <option value="4">4 صور</option>
+                  <option value="5">5 صور</option>
+                  <option value="6">6 صور</option>
+                  <option value="7">7 صور</option>
+                  <option value="8">8 صور</option>
+                </select>
+
+                <!-- 2. نسق وترتيب العرض (طولي انسيابي / عرضي شبكي) -->
+                <div id="p2LayoutControls" class="hidden flex items-center gap-1 bg-slate-900 border border-emerald-700/60 px-1 py-0.5 rounded">
+                  <span class="text-[8.5px] text-emerald-200 font-bold">التنسيق:</span>
+                  <button type="button" id="p2LayoutGridBtn" onclick="setPage2Layout('grid')" class="text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white transition" title="عرض أفقي شبكي متوازن">أفقي ▤</button>
+                  <button type="button" id="p2LayoutColBtn" onclick="setPage2Layout('column')" class="text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition" title="عرض طولي انسيابي ممتد">طولي ▮</button>
+                </div>
+
+                <!-- 3. زر إرفاق الصور المخصص للصفحة الثانية -->
+                <button type="button" id="p2UploadBtn" onclick="triggerPage2Upload()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded transition flex items-center gap-1 shadow-sm">
+                  <i class="fa-solid fa-cloud-arrow-up"></i>
+                  <span id="p2UploadLabel">إرفاق</span>
+                </button>
+                <input type="file" id="page2ImageFileInput" accept="image/*" multiple class="hidden" onchange="handlePage2ImageUpload(event)">
+              </div>
+
+              <!-- خيار تفعيل الباركود الاختياري -->
+              <label class="flex items-center gap-1 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded cursor-pointer select-none">
+                <input type="checkbox" id="qrToggleCheckbox" onchange="toggleQrVisibility(this.checked)" class="accent-emerald-500 rounded cursor-pointer">
+                <span class="text-[9.5px] font-bold text-slate-300 flex items-center gap-1">
+                  <i class="fa-solid fa-qrcode text-emerald-400"></i> باركود QR
+                </span>
+              </label>
+
+              <!-- أدوات ضبط موضع والتركيز البؤري للصورة مع السحب اليدوي -->
+              <div id="imageFocusControls" class="hidden flex items-center gap-1.5 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded">
+                <span class="text-[9px] font-bold text-amber-300 flex items-center gap-1">
+                  <i class="fa-solid fa-arrows-up-down-left-right"></i> اسحب الصورة بالفأرة للتحريك
+                </span>
+                <button type="button" onclick="resetActiveImagePosition()" class="text-[8.5px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded border border-slate-600 transition" title="إعادة الموضع إلى المنتصف">
+                  توسيط
+                </button>
+              </div>
+
+              <!-- تنبيه تجاوز الصفحة الذكي -->
+              <span id="overflowWarning" class="hidden text-[9px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/50 flex items-center gap-1 animate-pulse">
+                <i class="fa-solid fa-triangle-exclamation"></i> المحتوى قارب على تجاوز A4
+              </span>
+              
+              <!-- خيار تحديد عدد الصور المدمجة -->
+              <div class="flex items-center gap-1 bg-slate-900 border border-slate-700 px-1.5 py-0.5 rounded">
+                <i class="fa-regular fa-image text-amber-400 text-[10px]"></i>
+                <label for="imageCountSelect" class="text-[9px] text-slate-300 font-bold">الصور:</label>
+                <select id="imageCountSelect" onchange="updateImagePromptRule()" class="bg-slate-800 text-amber-300 text-[9.5px] font-bold rounded px-1 outline-none border-none">
+                  <option value="0">بدون صور</option>
+                  <option value="1">صورة واحدة (1)</option>
+                  <option value="2">صورتان (2)</option>
+                  <option value="3">3 صور</option>
+                  <option value="4">4 صور (حد أقصى)</option>
+                </select>
+              </div>
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="resetAiPrompt()" class="text-[10px] font-bold bg-slate-700 hover:bg-slate-600 text-slate-300 px-2 py-0.5 rounded transition flex items-center gap-1" title="استعادة الأصل">
+                <i class="fa-solid fa-arrow-rotate-left"></i> الأصل
+              </button>
+              <button onclick="copyAiPrompt()" class="text-[10px] font-bold bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-0.5 rounded transition flex items-center gap-1 shadow-sm">
+                <i class="fa-regular fa-copy"></i> نسخ
+              </button>
+            </div>
+          </div>
+          <textarea id="aiPromptBox" class="w-full h-28 text-[10px] font-mono p-2 bg-slate-900 border border-slate-700 rounded text-slate-200 leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-emerald-500">حلل الملفات المرفقة واستخرج بيانات المعيار المطلوب، ثم برمج لي "محتوى داخلي فقط" ليتم حقنه في وسط صفحة A4 مجهزة ومصممة مسبقاً:
+
+شروط برمجية صارمة جداً لمنع تكرار عناصر الصفحة:
+1. ممنوع نهائياً توليد ترويسة (اسم الوزارة، الإدارة، المدرسة، عنوان التقرير)، وممنوع إضافة اسم المعلم أو المدير أو التواقيع نهائياً لأنها مبنية وموجودة في الصفحة مسبقاً.
+2. لا تضع أي غلاف خارجي أو إطار صفحة (مثل class="a4-page" أو كروت وهوامش تجعلها تبدو كصفحة مستقلة).
+3. الكود الناتج يجب أن يكون عبارة عن عنصر <div> مرن ومباشر يحتوي فقط على:
+   - بطاقات مؤشرات أداء رئيسية (KPIs) أفقية وأنيقة.
+   - وصف موجز للإنجاز والأثر التعليمي.
+   - مصفوفة شواهد أو جدول إحصائي للمقارنة.
+   - رسم بياني تفاعلي عبر Chart.js داخل وسم &lt;canvas&gt; مع سكريبت تشغيله فوراً.
+4. استخدم خط 'Alyamama' مع Tailwind CSS وألوان التعليم الرسمية (#065f46، الذهبي، والرمادي).
+5. اجعل كافة النصوص والأرقام قابلة للتعديل المباشر (contenteditable="true").
+6. استغل المساحة بشكل مضغوط ومحكم ليناسب الارتفاع المتبقي من صفحة A4 دون تجاوز الورقة عند الطباعة.
+7. لا تكتب أي مقدمات أو شروحات، فقط أعطني كود الـ HTML / JS محاطاً بعلامات ```html فقط.</textarea>
+        </div>
+        <p class="text-[9.5px] text-slate-400 mt-1">يمكنك التبديل بين البرومبتين أعلاه، أو تعديل أي سطر قبل النسخ.</p>
+      </div>
+
+      <!-- 2. صندوق إدراج ولصق الكود وتطبيقه فوراً -->
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="font-bold text-sky-400 text-[11px] flex items-center gap-1">
+              <i class="fa-solid fa-code text-cyan-300"></i>
+              مكان إدراج الكود المستخرج (HTML / SVG / Chart.js):
+            </span>
+            <button onclick="pasteCodeFromClipboard()" class="text-[10px] font-bold bg-slate-700 hover:bg-slate-600 text-sky-200 px-2 py-0.5 rounded transition flex items-center gap-1">
+              <i class="fa-regular fa-paste"></i> لصق الكود
+            </button>
+          </div>
+          <textarea id="injectedCodeBox" placeholder="الصق كود HTML / JS الذي تم استخراجه من البرومبت هنا ثم اضغط تطبيق..." class="w-full h-28 text-[10.5px] font-mono p-2 bg-slate-900 border border-slate-700 rounded text-slate-200 leading-relaxed resize-none focus:ring-1 focus:ring-sky-500 outline-none"></textarea>
+        </div>
+        
+        <div class="flex gap-2 mt-1.5 flex-wrap">
+          <button onclick="applyInjectedCode()" class="flex-1 bg-sky-600 hover:bg-sky-500 text-white text-xs font-black py-1.5 px-3 rounded-lg transition flex items-center justify-center gap-1.5 shadow">
+            <i class="fa-solid fa-play"></i> تطبيق الكود فوراً على الورقة
+          </button>
+          
+          <!-- أدوات إرفاق الصور والتحكم بحجمها (تظهر تلقائياً عند وجود صور) -->
+          <div id="imageControlsWrapper" class="hidden flex items-center gap-1.5 flex-wrap">
+            <button id="uploadImagesBtn" onclick="triggerImageUpload()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-black py-1.5 px-3 rounded-lg transition flex items-center justify-center gap-1 shadow">
+              <i class="fa-solid fa-upload"></i> إرفاق الصور
+            </button>
+            <div class="flex items-center gap-1 bg-slate-800 border border-slate-700 px-2 py-1 rounded-lg">
+              <span class="text-[9.5px] font-bold text-slate-300">حجم الشواهد:</span>
+              <button type="button" onclick="changeImageSize('sm')" id="sizeBtn_sm" class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-700 hover:bg-slate-600 text-slate-200 transition">صغير</button>
+              <button type="button" onclick="changeImageSize('md')" id="sizeBtn_md" class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-600 text-white transition">متوسط</button>
+              <button type="button" onclick="changeImageSize('lg')" id="sizeBtn_lg" class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-700 hover:bg-slate-600 text-slate-200 transition">كبير</button>
+              
+              <!-- شريط انزلاقي سلس للتحكم المتزامن بالصورة والإطار -->
+              <div class="flex items-center gap-1 border-r border-slate-600 pr-1.5 mr-1">
+                <i class="fa-solid fa-magnifying-glass-minus text-[9px] text-slate-400"></i>
+                <input type="range" id="imageZoomSlider" min="55" max="220" value="96" oninput="applySliderZoom(this.value)" class="w-16 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500" title="تحريك يميناً للتكبير ويساراً للتصغير">
+                <i class="fa-solid fa-magnifying-glass-plus text-[9px] text-slate-400"></i>
+              </div>
+
+              <div class="flex items-center gap-0.5 border-r border-slate-600 pr-1 mr-0.5">
+                <span class="text-[8.5px] font-bold text-amber-300">كبير جداً:</span>
+                <button type="button" onclick="setExtraLargeImages('all')" class="px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-amber-600 hover:bg-amber-500 text-white transition" title="إعادة توزيع الشبكة وتكبير كافة الصور">الكل</button>
+                <button type="button" onclick="setExtraLargeImages('custom')" class="px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-slate-700 hover:bg-slate-600 text-amber-200 transition" title="اختيار صورة معينة لتأخذ عرض خانتين">مخصص</button>
+              </div>
+            </div>
+          </div>
+          <input type="file" id="batchImageInput" accept="image/*" multiple class="hidden" onchange="handleImageSelection(event)">
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- حاوية الصفحات الموحدة المزودة بمحرك التحجيم التلقائي -->
+  <div id="pagesWrapper" class="flex flex-col items-center justify-center gap-0 w-full transition-transform duration-200 origin-top">
+
+  <!-- ==================== ورقة التقرير المعتمدة (A4 القياسية) ==================== -->
+  <main class="a4-page" id="printableSheet">
+
+    <!-- 1. الترويسة الرسمية المختصرة والأنيقة (قابلة للتعديل بالكامل) -->
+    <header class="border-b-2 border-emerald-900 pb-2 mb-2">
+      <div class="flex items-center justify-between text-right">
+        <!-- يمين: بيانات الدولة والوزارة والإدارة والمدرسة الثابتة -->
+        <div class="text-[10px] leading-tight space-y-0.5">
+          <p class="font-black text-slate-950 text-[11px]" contenteditable="true">المملكة العربية السعودية</p>
+          <p class="font-bold text-slate-800" contenteditable="true">وزارة التعليم</p>
+          <p class="text-slate-700 font-bold" contenteditable="true">الإدارة العامة للتعليم بمنطقة حائل</p>
+          <p class="text-emerald-900 font-black text-[10.5px]" contenteditable="true">مدرسة الموهوبين العامة بنين</p>
+        </div>
+
+        <!-- وسط: عنوان الوثيقة الرسمية والاعتماد -->
+        <div class="text-center">
+          <h2 class="text-sm font-black text-slate-900 mt-1" contenteditable="true" id="reportHeaderTitle">
+            تقرير وشاهد إنجاز الأداء الوظيفي
+          </h2>
+          <p class="text-[9.5px] font-bold text-amber-700 mt-0.5" contenteditable="true" id="reportHeaderSub">
+            العام الدراسي: 1448هـ • الفصل الدراسي الأول
+          </p>
+        </div>
+
+        <!-- يسار: رمز الاستجابة السريعة QR Code (مخفي افتراضياً واختياري بالكامل) -->
+        <div class="w-32 flex flex-col items-center justify-center">
+          <div id="qrcodeWrapper1" class="hidden flex flex-col items-center justify-center">
+            <div id="qrcodeBox" class="p-1 bg-white border border-slate-200 rounded shadow-xs cursor-pointer" onclick="promptSetQRCode()" title="انقر لتعديل رابط الباركود"></div>
+            <span class="text-[7.5px] text-slate-400 font-bold mt-0.5">مسح الشاهد الرقمي</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. مساحة العمل البيضاء النظيفة (Dynamic Content Canvas) -->
+    <div id="dynamicPageCanvas" class="flex-1 flex flex-col justify-start overflow-hidden">
+      
+      <!-- حالة الظهور الافتراضية الفارغة -->
+      <div id="emptyHintBox" class="empty-placeholder my-auto flex flex-col items-center justify-center text-slate-400">
+        <i class="fa-solid fa-code text-3xl text-slate-300 mb-2"></i>
+        <h3 class="text-xs font-bold text-slate-600 mb-1">المساحة مجهزة لاستقبال كود التقرير المولد</h3>
+        <p class="text-[10px] text-slate-400 max-w-sm">
+          انسخ البرومبت من الأعلى وارفعه للذكاء الاصطناعي مع ملفاتك، ثم الصق الكود الناتج في الصندوق العلوي واضغط "تطبيق الكود فوراً".
+        </p>
+      </div>
+
+    </div>
+
+    <!-- 3. تذييل التواقيع والاعتماد الثابت (نايف الشومر ومدير المدرسة) -->
+    <footer class="pt-2 border-t-2 border-slate-900 text-slate-800 mt-2">
+      <div class="grid grid-cols-2 text-center text-[10px]">
+        <!-- معلم المادة ومعد التقرير الثابت: أ. نايف الشومر -->
+        <div class="text-right pr-6">
+          <p class="text-slate-500 font-semibold" contenteditable="true">المعلم:</p>
+          <p class="font-black text-slate-950 text-[11px] mt-0.5" contenteditable="true">نايف الشومر</p>
+        </div>
+
+        <!-- مدير المدرسة والاعتماد والختم -->
+        <div class="text-left pl-6">
+          <p class="text-slate-500 font-semibold" contenteditable="true">مدير المدرسة:</p>
+          <p class="font-black text-slate-950 text-[11px] mt-0.5" contenteditable="true">مدير مدرسة الموهوبين العامة بنين</p>
+        </div>
+      </div>
+
+      <!-- شريط سفلي مصغر وموثق -->
+      <div class="mt-2 text-center text-[7.5px] text-slate-400 border-t border-slate-100 pt-1 flex justify-between px-1">
+        <span contenteditable="true"><span style="background-color: rgb(255, 255, 255);">&nbsp;</span></span>
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- ==================== الصفحة الثانية المشروطة (متطابقة تماماً) ==================== -->
+  <main class="a4-page hidden" id="secondPageSheet">
+    <!-- الترويسة الرسمية المتطابقة -->
+    <header class="border-b-2 border-emerald-900 pb-2 mb-2">
+      <div class="flex items-center justify-between text-right">
+        <div class="text-[10px] leading-tight space-y-0.5">
+          <p class="font-black text-slate-950 text-[11px]" contenteditable="true">المملكة العربية السعودية</p>
+          <p class="font-bold text-slate-800" contenteditable="true">وزارة التعليم</p>
+          <p class="text-slate-700 font-bold" contenteditable="true">الإدارة العامة للتعليم بمنطقة حائل</p>
+          <p class="text-emerald-900 font-black text-[10.5px]" contenteditable="true">مدرسة الموهوبين العامة بنين</p>
+        </div>
+        <div class="text-center">
+          <h2 class="text-sm font-black text-slate-900 mt-1" contenteditable="true">
+            تقرير وشاهد إنجاز الأداء الوظيفي (تابع - صفحة 2)
+          </h2>
+          <p class="text-[9.5px] font-bold text-amber-700 mt-0.5" contenteditable="true">
+            العام الدراسي: 1448هـ • الفصل الدراسي الأول
+          </p>
+        </div>
+        <div class="w-32 flex flex-col items-center justify-center">
+          <div id="qrcodeWrapper2" class="hidden flex flex-col items-center justify-center">
+            <div id="qrcodeBox2" class="p-1 bg-white border border-slate-200 rounded shadow-xs cursor-pointer" onclick="promptSetQRCode()" title="انقر لتعديل رابط الباركود"></div>
+            <span class="text-[7.5px] text-slate-400 font-bold mt-0.5">وثيقة معتمدة</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- مساحة الشواهد التوثيقية والامتداد في الصفحة الثانية (مستقلة تماماً وبنفس نسق وهوية الصفحة) -->
+    <div id="secondPageCanvas" class="flex-1 flex flex-col justify-start overflow-hidden">
+      <!-- ترويسة داخلية أنيقة لمعرض شواهد الصفحة الثانية مع مؤشر التنسيق -->
+      <div class="flex items-center justify-between border-b border-slate-200 pb-1.5 mb-2">
+        <h3 class="text-xs font-black text-emerald-950 flex items-center gap-1.5" contenteditable="true">
+          <i class="fa-solid fa-photo-film text-emerald-700"></i> معرض شواهد وأدلة التنفيذ الميدانية
+        </h3>
+        <div class="flex items-center gap-1.5">
+          <span id="p2LayoutBadge" class="text-[8.5px] font-bold bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded border border-emerald-300">-</span>
+          <span class="text-[9px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200" contenteditable="true">-</span>
+        </div>
+      </div>
+
+      <!-- شبكة بطاقات الصور التفاعلية الخاصة بالصفحة الثانية -->
+      <div id="page2PhotoGrid" class="flex-1 flex flex-col justify-center items-center">
+        <div class="empty-placeholder my-auto flex flex-col items-center justify-center text-slate-400">
+          <i class="fa-regular fa-images text-3xl text-slate-300 mb-2"></i>
+          <h3 class="text-xs font-bold text-slate-600 mb-1">حدد عدد الصور ونوع التنسيق من الشريط العلوي</h3>
+          <p class="text-[10px] text-slate-400 max-w-sm text-center">
+            اختر عدد الشواهد (من 1 إلى 8 صور) مع إمكانية عرضها بشكل طولي انسيابي أو عرضي والتحكم بتكبير وتصغير كل شاهد بدقة.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- تذييل التواقيع والاعتماد المتطابق تماماً -->
+    <footer class="pt-2 border-t-2 border-slate-900 text-slate-800 mt-2">
+      <div class="grid grid-cols-2 text-center text-[10px]">
+        <div class="text-right pr-6">
+          <p class="text-slate-500 font-semibold" contenteditable="true">المعلم:</p>
+          <p class="font-black text-slate-950 text-[11px] mt-0.5" contenteditable="true">نايف الشومر</p>
+        </div>
+        <div class="text-left pl-6">
+          <p class="text-slate-500 font-semibold" contenteditable="true">مدير المدرسة:</p>
+          <p class="font-black text-slate-950 text-[11px] mt-0.5" contenteditable="true">مدير مدرسة الموهوبين العامة بنين</p>
+        </div>
+      </div>
+      <div class="mt-2 text-center text-[7.5px] text-slate-400 border-t border-slate-100 pt-1 flex justify-between px-1">
+        <span>صفحة 2 من 2</span>
+        <span>-</span>
+      </div>
+    </footer>
+  </main>
+  </div>
+
+  <!-- ==================== المحرك البرمجي ==================== -->
+  <script>
+    // عرض رسالة Toast مخصصة
+    function showToast(message, isError = false) {
+      const toast = document.getElementById("toastNotice");
+      const toastMsg = document.getElementById("toastMsg");
+      const toastIcon = document.getElementById("toastIcon");
+
+      toastMsg.innerText = message;
+      if (isError) {
+        toastIcon.className = "fa-solid fa-triangle-exclamation text-rose-400";
+      } else {
+        toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
+      }
+
+      toast.className = "show flex items-center gap-2 justify-center text-xs font-bold";
+      setTimeout(() => {
+        toast.className = toast.className.replace("show", "");
+      }, 2500);
+    }
+
+    // نسخ البرومبت بنقرة واحدة
+    function copyAiPrompt() {
+      const area = document.getElementById("aiPromptBox");
+      area.select();
+      try {
+        document.execCommand("copy");
+        showToast("تم نسخ البرومبت بنجاح! يمكنك الآن رفعه مع ملفاتك.");
+      } catch (e) {
+        showToast("تعذر النسخ التلقائي، يرجى النسخ يدوياً", true);
+      }
+    }
+
+    // لصق الكود من الحافظة
+    async function pasteCodeFromClipboard() {
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const text = await navigator.clipboard.readText();
+          document.getElementById("injectedCodeBox").value = text;
+          showToast("تم لصق الكود بنجاح!");
+        } else {
+          showToast("يرجى الضغط داخل الصندوق ولصق النص بـ Ctrl+V", true);
+        }
+      } catch (err) {
+        showToast("يرجى لصق الكود داخل الصندوق عبر Ctrl+V", true);
+      }
+    }
+
+    // تفريغ محتوى الورقة
+    function clearCanvas() {
+      const canvas = document.getElementById("dynamicPageCanvas");
+      canvas.innerHTML = `
+        <div id="emptyHintBox" class="empty-placeholder my-auto flex flex-col items-center justify-center text-slate-400">
+          <i class="fa-solid fa-code text-3xl text-slate-300 mb-2"></i>
+          <h3 class="text-xs font-bold text-slate-600 mb-1">المساحة مجهزة لاستقبال كود التقرير المولد</h3>
+          <p class="text-[10px] text-slate-400 max-w-sm">
+            انسخ البرومبت من الأعلى وارفعه للذكاء الاصطناعي مع ملفاتك، ثم الصق الكود الناتج في الصندوق العلوي واضغط "تطبيق الكود فوراً".
+          </p>
+        </div>
+      `;
+      document.getElementById("injectedCodeBox").value = "";
+      showToast("تم تفريغ الورقة واستعادة الحالة النظيفة.");
+    }
+
+    // تطبيق وحقن الكود في مساحة الورقة مع تنفيذ السكريبتات بأمان
+    function applyInjectedCode() {
+      const rawText = document.getElementById("injectedCodeBox").value.trim();
+      if (!rawText) {
+        showToast("يرجى إدراج الكود في الصندوق أولاً!", true);
+        return;
+      }
+
+      // تنظيف الكود إذا كان محاطاً بعلامات Markdown
+      let cleanCode = rawText;
+      if (cleanCode.startsWith("```html")) cleanCode = cleanCode.substring(7);
+      else if (cleanCode.startsWith("```")) cleanCode = cleanCode.substring(3);
+      if (cleanCode.endsWith("```")) cleanCode = cleanCode.substring(0, cleanCode.length - 3);
+      cleanCode = cleanCode.trim();
+
+      const canvas = document.getElementById("dynamicPageCanvas");
+      
+      // تفريغ المحتوى وحقن الكود الجديد
+      canvas.innerHTML = cleanCode;
+
+      // التأكد من جعل كل العناصر النصية داخل الكود المحقون قابلة للتعديل إن لم تكن كذلك
+      const textElements = canvas.querySelectorAll("p, span, h1, h2, h3, h4, h5, h6, td, th, li, strong");
+      textElements.forEach(el => {
+        if (!el.hasAttribute("contenteditable")) {
+          el.setAttribute("contenteditable", "true");
+        }
+      });
+
+      // استخراج وتنفيذ أي سكريبتات مدمجة (مثل سكريبتات تشغيل Chart.js)
+      const scripts = canvas.querySelectorAll("script");
+      scripts.forEach(oldScript => {
+        const newScript = document.createElement("script");
+        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+      });
+
+      // فحص وإظهار زر رفع الصور فور تطبيق الكود
+      checkAndToggleImageUploadButton();
+      showToast("تم تطبيق الكود وعكسه على الورقة بنجاح!");
+    }
+
+    // إدارة وضبط البرومبت الذكي
+    let currentPromptMode = 'files';
+    let selectedImageCount = 0;
+
+    function getImageInstruction(count) {
+      if (count === 0) return "5. لا تضع أي أماكن لصور، واعتمد التقرير على الجداول والرسوم والمؤشرات فقط في صفحة A4 واحدة.";
+      const gridClass = count === 1 ? 'grid-cols-1' : count === 2 ? 'grid-cols-2' : count === 3 ? 'grid-cols-3' : 'grid-cols-2 md:grid-cols-4';
+      return `5. خصص مساحة معرض شواهد مرئية لعدد (${count}) صور وفق هيكل برمجي صارم يمنع اختفاء النصوص:
+   - استخدم شبكة (${gridClass}) بفواصل مناسبة (gap-2).
+   - يجب أن تتكون كل بطاقة من حاوية رئيسية (div class="evidence-card bg-slate-50 border border-slate-200 rounded-xl p-1.5 flex flex-col justify-between").
+   - بداخلها عنصر الصورة المستقل: <img class="evidence-img w-full h-24 object-cover rounded-lg block" src="" alt="شاهد">.
+   - وأسفل الصورة مباشرة حاوية نصية مستقلة تماماً لا تتأثر بحجم الصورة:
+     <div class="evidence-caption text-[10px] font-bold text-slate-700 text-center mt-1 py-1 px-1 bg-white border border-slate-200 rounded-md" contenteditable="true">اكتب وصف الشاهد هنا</div>
+   - الأولوية القصوى للمحتوى أن يتسع في صفحة A4 واحدة، وإذا استلزم الأمر صفحة ثانية للضرورة القصوى، أنشئ صفحة ثانية مستقلة بنفس الترويسة والتذييل تماماً مع عبارة (تابع الشاهد - صفحة 2).`;
+    }
+
+    function buildPreset(mode, imgCount) {
+      const imgRule = getImageInstruction(imgCount);
+      if (mode === 'files') {
+        return `حلل الملفات المرفقة واستخرج بيانات المعيار المطلوب، ثم برمج لي "محتوى داخلي فقط" ليتم حقنه في وسط صفحة A4 مجهزة ومصممة مسبقاً:
+
+شروط برمجية صارمة جداً لمنع تكرار عناصر الصفحة:
+1. ممنوع نهائياً توليد ترويسة (اسم الوزارة، الإدارة، المدرسة، عنوان التقرير)، وممنوع إضافة اسم المعلم أو المدير أو التواقيع نهائياً لأنها مبنية وموجودة في الصفحة مسبقاً.
+2. لا تضع أي غلاف خارجي أو إطار صفحة (مثل class="a4-page" أو كروت وهوامش تجعلها تبدو كصفحة مستقلة).
+3. الكود الناتج يجب أن يكون عبارة عن عنصر <div> مرن ومباشر يحتوي على:
+   - بطاقات مؤشرات أداء رئيسية (KPIs) أفقية وأنيقة.
+   - وصف موجز للإنجاز والأثر التعليمي.
+   - مصفوفة شواهد أو جدول إحصائي للمقارنة.
+   - رسم بياني تفاعلي عبر Chart.js داخل وسم <canvas> مع سكريبت تشغيله فوراً.
+4. استخدم خط 'Alyamama' مع Tailwind CSS وألوان التعليم الرسمية (#065f46، الذهبي، والرمادي).
+${imgRule}
+6. اجعل كافة النصوص والأرقام قابلة للتعديل المباشر (contenteditable="true").
+7. استغل المساحة بشكل مضغوط ومحكم ليناسب الارتفاع المتبقي من صفحة A4 دون تجاوز الورقة عند الطباعة.
+8. لا تكتب أي مقدمات أو شروحات، فقط أعطني كود الـ HTML / JS محاطاً بعلامات \`\`\`html فقط.`;
+      } else {
+        return `أريد تصميم وبرمجة "محتوى داخلي فقط" لشاهد إنجاز رسمي للأداء الوظيفي بدون مرفقات، ليتم حقنه في وسط صفحة A4 مجهزة مسبقاً:
+[اكتب هنا موضوع المعيار بالتفصيل، مثلاً: معيار تفعيل منصة تعليمية / خطة رعاية الموهوبين / الفاقد التعليمي / مجتمعات التعلم المهنية...].
+
+المطلوب برمجته بشروط صارمة تمنع تكرار الصفحة والعناصر:
+1. ممنوع نهائياً توليد ترويسة رسمية أو عنوان عام، وممنوع ذكر اسم المعلم أو المدير أو التواقيع نهائياً لأنها موجودة وثابتة في التقرير.
+2. لا تضع أي إطار ورقة خارجي أو هوامش صفحة مستقلة تجعلها تبدو كصفحة داخل صفحة.
+3. قم ببرمجة <div> متكامل يملأ المساحة المتاحة يحتوي على:
+   - مؤشرات أداء كمية ونوعية وواقعية (بطاقات KPIs) مناسبة للمعيار.
+   - وصف دقيق وموجز للأثر والممارسة التعليمية.
+   - جدول إحصائي رقمي (قبلي/بعدي أو نسب إنجاز).
+   - رسم بياني تفاعلي أو بياني مقارن عبر Chart.js داخل <canvas> وسكريبت تشغيله فوراً.
+4. استخدم خط اليمامة 'Alyamama' مع Tailwind CSS ودرجات الأخضر الرسمي (#065f46، الذهبي، والرمادي).
+${imgRule}
+6. اجعل جميع النصوص والبيانات الرقمية قابلة للتعديل الفوري عبر (contenteditable="true").
+7. استغل المساحة المتاحة بارتفاع متزن ومضغوط يناسب الحيز المتبقي من ورقة A4 بدقة متناهية لمنع تجاوز الصفحة عند الطباعة.
+8. لا تكتب أي كلام إضافي أو مقدمات، فقط كود الـ HTML / JS داخل علامات \`\`\`html فقط.`;
+      }
+    }
+
+    function updateImagePromptRule() {
+      const select = document.getElementById("imageCountSelect");
+      selectedImageCount = parseInt(select.value, 10);
+      const box = document.getElementById("aiPromptBox");
+      box.value = buildPreset(currentPromptMode, selectedImageCount);
+      showToast(`تم تحديث البرومبت ليشمل (${selectedImageCount}) صور بإطارات انسيابية`);
+    }
+
+    // فحص وتفعيل شريط التحكم بالصور
+    function checkAndToggleImageUploadButton() {
+      const canvas = document.getElementById("dynamicPageCanvas");
+      const imgElements = canvas.querySelectorAll("img.evidence-img, .evidence-img, [data-evidence-slot], .evidence-card");
+      const wrapper = document.getElementById("imageControlsWrapper");
+      const btn = document.getElementById("uploadImagesBtn");
+      
+      if (imgElements.length > 0) {
+        wrapper.classList.remove("hidden");
+        btn.innerHTML = `<i class="fa-solid fa-upload"></i> إرفاق الصور (${imgElements.length})`;
+      } else {
+        wrapper.classList.add("hidden");
+      }
+    }
+
+    // دالة تغيير وتعديل حجم الصور العام مباشرة داخل الورقة
+    function changeImageSize(size) {
+      const canvas = document.getElementById("dynamicPageCanvas");
+      const targets = canvas.querySelectorAll("img.evidence-img, .evidence-img, [data-evidence-slot] img, .evidence-card img");
+
+      const heights = {
+        sm: "65px",
+        md: "96px",
+        lg: "140px"
+      };
+
+      targets.forEach(img => {
+        img.style.height = heights[size];
+        img.style.maxHeight = heights[size];
+        img.style.objectFit = "cover";
+      });
+
+      // تحديث ألوان أزرار الحجم
+      ['sm', 'md', 'lg'].forEach(s => {
+        const b = document.getElementById(`sizeBtn_${s}`);
+        if (!b) return;
+        if (s === size) {
+          b.className = "px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-600 text-white transition";
+        } else {
+          b.className = "px-2 py-0.5 rounded text-[9px] font-bold bg-slate-700 hover:bg-slate-600 text-slate-200 transition";
+        }
+      });
+
+      showToast(`تم تعديل حجم صور الشواهد إلى (${size === 'sm' ? 'صغير' : size === 'md' ? 'متوسط' : 'كبير'}) بنجاح!`);
+    }
+
+    // دالة التحكم بالحجم الكبير جداً (الكل أو مخصص) مع صيانة مكان النصوص
+    let targetPageMode = 1;
+    let page2SelectedCount = 0;
+
+    function setPageCountMode(pages) {
+      targetPageMode = pages;
+      const p2 = document.getElementById("secondPageSheet");
+      const btn1 = document.getElementById("btnPage1");
+      const btn2 = document.getElementById("btnPage2");
+      const p2Controls = document.getElementById("page2PhotoControls");
+      const arrangeBox = document.getElementById("pagesArrangementControls");
+
+      if (pages === 2) {
+        p2.classList.remove("hidden");
+        if (p2Controls) p2Controls.classList.remove("hidden");
+        if (arrangeBox) arrangeBox.classList.remove("hidden");
+        btn2.className = "text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-600 text-white transition";
+        btn1.className = "text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition";
+        initQRCode();
+        showToast("تم تفعيل الصفحة الثانية 📄📄 مع خيارات طريقة العرض");
+      } else {
+        p2.classList.add("hidden");
+        if (p2Controls) p2Controls.classList.add("hidden");
+        if (arrangeBox) arrangeBox.classList.add("hidden");
+        btn1.className = "text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-600 text-white transition";
+        btn2.className = "text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition";
+        setPagesArrangement('vertical');
+        showToast("تم الاعتماد على صفحة واحدة A4 📄");
+      }
+      updateImagePromptRule();
+      checkPageOverflow();
+    }
+
+    // إدارة الصفحة الثانية الشاملة (العدد، التنسيق، والتحكم بالزووم الفردي)
+    let p2CurrentLayout = 'grid'; // 'grid' أو 'column'
+
+    function onPage2CountSelected(val) {
+      const count = parseInt(val, 10);
+      if (isNaN(count) || count < 1) return;
+
+      page2SelectedCount = count;
+
+      // إظهار أزرار اختيار نمط التنسيق وزر الرفع
+      const layoutControls = document.getElementById("p2LayoutControls");
+      const uploadBtn = document.getElementById("p2UploadBtn");
+      const uploadLabel = document.getElementById("p2UploadLabel");
+
+      if (layoutControls) layoutControls.classList.remove("hidden");
+      if (uploadBtn && uploadLabel) {
+        uploadBtn.classList.remove("hidden");
+        uploadLabel.textContent = `إرفاق الصور (${count})`;
+      }
+
+      renderPage2ImageSlots(count, p2CurrentLayout);
+    }
+
+    // حفظ بيانات صور ونصوص وتخصيصات الصفحة الثانية في الذاكرة الحية لضمان عدم اختفائها أبداً عند تبديل التنسيق
+    function capturePage2State() {
+      const state = {};
+      const grid = document.getElementById("page2PhotoGrid");
+      if (!grid) return state;
+
+      const cards = grid.querySelectorAll(".evidence-card");
+      cards.forEach((card, idx) => {
+        const i = idx + 1;
+        const img = document.getElementById(`p2_img_${i}`);
+        const caption = card.querySelector(".evidence-caption");
+        const frame = img ? img.parentElement : null;
+
+        state[i] = {
+          src: img && !img.classList.contains("hidden") ? img.src : "",
+          scale: img ? (img.dataset.scale || "1") : "1",
+          rotate: img ? (img.dataset.rotate || "0") : "0",
+          posX: img ? (img.dataset.posX || "50") : "50",
+          posY: img ? (img.dataset.posY || "50") : "50",
+          objectFit: img ? (img.style.objectFit || "cover") : "cover",
+          frameHeight: frame ? frame.style.height : "",
+          span: card.style.gridColumn || "",
+          captionText: caption ? caption.innerText : `توثيق الشاهد (${i}) - اضغط للتعديل`
+        };
+      });
+      return state;
+    }
+
+    function restorePage2State(state) {
+      if (!state) return;
+      Object.keys(state).forEach(i => {
+        const data = state[i];
+        const img = document.getElementById(`p2_img_${i}`);
+        const ph = document.getElementById(`p2_ph_${i}`);
+        const card = img ? img.closest(".evidence-card") : null;
+        const frame = img ? img.parentElement : null;
+        const caption = card ? card.querySelector(".evidence-caption") : null;
+
+        if (img && data.src) {
+          img.src = data.src;
+          img.classList.remove("hidden");
+          img.style.display = "block";
+          if (ph) ph.classList.add("hidden");
+        }
+
+        if (img) {
+          img.dataset.scale = data.scale;
+          img.dataset.rotate = data.rotate;
+          img.dataset.posX = data.posX;
+          img.dataset.posY = data.posY;
+          img.style.objectFit = data.objectFit;
+          img.style.objectPosition = `${data.posX}% ${data.posY}%`;
+          p2ApplyTransforms(img);
+        }
+
+        if (frame && data.frameHeight) {
+          frame.style.height = data.frameHeight;
+          frame.classList.remove('h-32', 'h-36', 'h-40', 'h-44', 'h-48', 'h-56', 'h-64', 'h-72', 'h-96');
+        }
+
+        if (card && data.span) {
+          card.style.gridColumn = data.span;
+        }
+
+        if (caption && data.captionText) {
+          caption.innerText = data.captionText;
+        }
+      });
+    }
+
+    function setPage2Layout(mode) {
+      p2CurrentLayout = mode;
+      const btnGrid = document.getElementById("p2LayoutGridBtn");
+      const btnCol = document.getElementById("p2LayoutColBtn");
+      const badge = document.getElementById("p2LayoutBadge");
+
+      if (mode === 'grid') {
+        if (btnGrid) btnGrid.className = "text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white transition";
+        if (btnCol) btnCol.className = "text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition";
+        if (badge) badge.innerText = "تنسيق عرضي شبكي";
+        showToast("تم تطبيق التنسيق العرضي مع بقاء كامل الصور والنصوص ▤");
+      } else {
+        if (btnCol) btnCol.className = "text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white transition";
+        if (btnGrid) btnGrid.className = "text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition";
+        if (badge) badge.innerText = "تنسيق طولي انسيابي";
+        showToast("تم تطبيق التنسيق الطولي مع بقاء كامل الصور والنصوص ▮");
+      }
+
+      if (page2SelectedCount > 0) {
+        const savedState = capturePage2State();
+        renderPage2ImageSlots(page2SelectedCount, p2CurrentLayout);
+        restorePage2State(savedState);
+      }
+    }
+
+    // إدارة نسق وترتيب الصفحتين (تحت بعض أو بجانب بعض مع تبديل اليمين واليسار)
+    let pagesArrangement = 'vertical'; // 'vertical' أو 'horizontal'
+    let pagesOrderRtl = true; // true: ص1 يمين، false: ص1 يسار
+
+    // محرك الملاءمة التلقائية للشاشة وحساب نسبة العرض بدقة
+    let currentPagesScale = 1;
+
+    function applyPagesScale(scaleVal) {
+      const wrapper = document.getElementById("pagesWrapper");
+      if (!wrapper) return;
+
+      if (scaleVal === 'auto') {
+        const availableWidth = window.innerWidth - 60; // استبعاد هوامش المتصفح
+        const targetWidth = 1680; // العرض الطبيعي للورقتين A4 متجاورتين
+        if (availableWidth < targetWidth) {
+          currentPagesScale = Math.max(0.55, Math.min(1, availableWidth / targetWidth));
+        } else {
+          currentPagesScale = 1;
+        }
+      } else {
+        currentPagesScale = parseFloat(scaleVal);
+      }
+
+      // تطبيق التحجيم البصري على المعاينة فقط مع ضبط نقطة الارتكاز بالأعلى
+      if (pagesArrangement === 'horizontal') {
+        wrapper.style.transform = `scale(${currentPagesScale})`;
+        wrapper.style.transformOrigin = "top center";
+      } else {
+        wrapper.style.transform = "none";
+      }
+
+      // تحديث ألوان أزرار النسبة
+      ['auto', '90', '80', '100'].forEach(key => {
+        const btn = document.getElementById(`scaleBtn_${key}`);
+        if (!btn) return;
+        const matches = (key === 'auto' && scaleVal === 'auto') ||
+                        (key === '90' && scaleVal === 0.9) ||
+                        (key === '80' && scaleVal === 0.8) ||
+                        (key === '100' && scaleVal === 1);
+        if (matches) {
+          btn.className = "text-[8px] font-bold px-1 py-0.5 rounded bg-emerald-600 text-white transition";
+        } else {
+          btn.className = "text-[8px] font-bold px-1 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition";
+        }
+      });
+
+      showToast(`مستوى عرض المعاينة: ${Math.round(currentPagesScale * 100)}% 🖥️`);
+    }
+
+    // إعادة الضبط التلقائي إذا تم تغيير مقاس نافذة المتصفح
+    window.addEventListener("resize", () => {
+      if (pagesArrangement === 'horizontal') {
+        const autoBtn = document.getElementById("scaleBtn_auto");
+        if (autoBtn && autoBtn.classList.contains("bg-emerald-600")) {
+          applyPagesScale('auto');
+        }
+      }
+    });
+
+    function setPagesArrangement(mode) {
+      pagesArrangement = mode;
+      const wrapper = document.getElementById("pagesWrapper");
+      const btnVert = document.getElementById("btnViewVertical");
+      const btnHoriz = document.getElementById("btnViewHorizontal");
+      const btnOrder = document.getElementById("btnOrderSwap");
+      const fitGroup = document.getElementById("screenFitGroup");
+
+      if (!wrapper) return;
+
+      if (mode === 'horizontal') {
+        wrapper.className = `flex flex-row justify-center items-start gap-4 w-full transition-transform duration-200 origin-top ${pagesOrderRtl ? '' : 'flex-row-reverse'}`;
+        if (btnHoriz) btnHoriz.className = "text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-sky-600 text-white transition";
+        if (btnVert) btnVert.className = "text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition";
+        if (btnOrder) btnOrder.classList.remove("hidden");
+        if (fitGroup) fitGroup.classList.remove("hidden");
+
+        // تطبيق الملاءمة التلقائية فور التحويل للمتجاور
+        setTimeout(() => applyPagesScale('auto'), 50);
+        showToast("تم العرض بجانب بعض مع الملاءمة التلقائية لشاشتك ⯇⯈");
+      } else {
+        wrapper.className = "flex flex-col items-center justify-center gap-0 w-full transition-transform duration-200 origin-top";
+        wrapper.style.transform = "none";
+        if (btnVert) btnVert.className = "text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-sky-600 text-white transition";
+        if (btnHoriz) btnHoriz.className = "text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition";
+        if (btnOrder) btnOrder.classList.add("hidden");
+        if (fitGroup) fitGroup.classList.add("hidden");
+        showToast("تم ضبط العرض تحت بعضهما عمودياً ⯅⯆");
+      }
+    }
+
+    function togglePagesOrder() {
+      pagesOrderRtl = !pagesOrderRtl;
+      const label = document.getElementById("orderSwapLabel");
+      if (label) label.textContent = pagesOrderRtl ? "ص1 يمين" : "ص1 يسار";
+      setPagesArrangement('horizontal');
+      showToast(pagesOrderRtl ? "ترتيب العرض: الصفحة 1 في اليمين" : "ترتيب العرض: الصفحة 1 في اليسار");
+    }
+
+    // تطبيق التحويل الشامل (تكبير + تدوير) مع الحفاظ على البيانات
+    function p2ApplyTransforms(img) {
+      if (!img) return;
+      const scale = parseFloat(img.dataset.scale || "1");
+      const rotate = parseInt(img.dataset.rotate || "0", 10);
+      img.style.transform = `scale(${scale}) rotate(${rotate}deg)`;
+    }
+
+    // زووم فردي لكل صورة (Zoom In / Zoom Out)
+    function p2AdjustZoom(idx, delta) {
+      const img = document.getElementById(`p2_img_${idx}`);
+      if (!img) return;
+      let currentScale = parseFloat(img.dataset.scale || "1");
+      currentScale = Math.max(0.6, Math.min(3.5, currentScale + delta));
+      img.dataset.scale = currentScale;
+      p2ApplyTransforms(img);
+      showToast(`مستوى التقريب: ${Math.round(currentScale * 100)}% 🔍`);
+    }
+
+    // لف وتدوير الصورة يميناً أو يساراً بزاوية 90 درجة
+    function p2Rotate(idx, deg) {
+      const img = document.getElementById(`p2_img_${idx}`);
+      if (!img) return;
+      let currentRotate = parseInt(img.dataset.rotate || "0", 10);
+      currentRotate = (currentRotate + deg) % 360;
+      img.dataset.rotate = currentRotate;
+      p2ApplyTransforms(img);
+      showToast(`زاوية التدوير: ${currentRotate}° 🔄`);
+    }
+
+    // مضاعفة عرض البطاقة الفردية لتأخذ خانتين في الشبكة
+    function p2ToggleSpan(idx) {
+      const img = document.getElementById(`p2_img_${idx}`);
+      if (!img) return;
+      const card = img.closest('.evidence-card');
+      if (!card) return;
+      if (card.style.gridColumn.includes('span 2')) {
+        card.style.gridColumn = '';
+        showToast(`البطاقة (${idx}) عادت للعرض الافتراضي`);
+      } else {
+        card.style.gridColumn = 'span 2 / span 2';
+        showToast(`تمت مضاعفة عرض البطاقة (${idx}) بنجاح ⭐`);
+      }
+      checkPageOverflow();
+    }
+
+    // تبديل احتواء الصورة (Fit / Fill)
+    function p2ToggleFit(idx) {
+      const img = document.getElementById(`p2_img_${idx}`);
+      if (!img) return;
+      if (img.style.objectFit === "contain") {
+        img.style.objectFit = "cover";
+        showToast("نمط التغطية: ملء الإطار (Cover)");
+      } else {
+        img.style.objectFit = "contain";
+        showToast("نمط التغطية: كامل الصورة (Fit)");
+      }
+    }
+
+    // بناء شبكة الشواهد بمرونة فائقة بين الطولي والعرضي دون كسر حدود A4
+    function renderPage2ImageSlots(count, layout) {
+      const grid = document.getElementById("page2PhotoGrid");
+      if (!grid) return;
+
+      let layoutClass = "";
+      let imgHeightClass = "h-36";
+
+      if (layout === 'column') {
+        // توزيع طولي انسيابي في عمود واحد متناسق يملأ الصفحة
+        layoutClass = "grid grid-cols-1 gap-2 flex-1 items-stretch";
+        if (count === 1) imgHeightClass = "h-[480px]";
+        else if (count === 2) imgHeightClass = "h-56";
+        else if (count === 3) imgHeightClass = "h-40";
+        else if (count === 4) imgHeightClass = "h-32";
+        else if (count <= 6) imgHeightClass = "h-24";
+        else imgHeightClass = "h-20";
+      } else {
+        // توزيع عرضي وشبكي هندسي ذكي
+        if (count === 1) {
+          layoutClass = "grid grid-cols-1 gap-2 flex-1 items-stretch";
+          imgHeightClass = "h-[450px]";
+        } else if (count === 2) {
+          layoutClass = "grid grid-cols-2 gap-2 flex-1 items-stretch";
+          imgHeightClass = "h-72";
+        } else if (count === 3) {
+          layoutClass = "grid grid-cols-3 gap-2 flex-1 items-stretch";
+          imgHeightClass = "h-64";
+        } else if (count === 4) {
+          layoutClass = "grid grid-cols-2 gap-2 flex-1 items-stretch";
+          imgHeightClass = "h-48";
+        } else if (count === 5 || count === 6) {
+          layoutClass = "grid grid-cols-3 gap-2 flex-1 items-stretch";
+          imgHeightClass = "h-36";
+        } else {
+          // 7 و 8 صور (ممتلئة بالصفحة عبر 4 أعمدة وصفين)
+          layoutClass = "grid grid-cols-4 gap-1.5 flex-1 items-stretch";
+          imgHeightClass = "h-32";
+        }
+      }
+
+      grid.className = layoutClass;
+
+      let html = "";
+      for (let i = 1; i <= count; i++) {
+        html += `
+          <div class="evidence-card bg-slate-50 border border-slate-200/90 rounded-xl p-1.5 flex flex-col justify-between shadow-xs transition hover:border-emerald-500">
+            <!-- حاوية الصورة مع أزرار التحكم بالزووم والموضع -->
+            <div class="w-full ${imgHeightClass} bg-white rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center relative group">
+              <img id="p2_img_${i}" class="evidence-img w-full h-full object-cover rounded-lg hidden transition-transform duration-150 origin-center" alt="شاهد توثيقي ${i}" data-scale="1" data-pos-x="50" data-pos-y="50">
+              
+              <!-- مؤشر الفراغ -->
+              <div id="p2_ph_${i}" class="flex flex-col items-center justify-center text-slate-400 p-2 text-center pointer-events-none">
+                <i class="fa-regular fa-image text-2xl text-slate-300 mb-1"></i>
+                <span class="text-[9px] font-bold text-slate-400">شاهد (${i})</span>
+              </div>
+
+              <!-- شريط تحكم شامل لكل بطاقة: تكبير وتصغير الإطار، زووم، تدوير مصحح، توسيع خانة، وتعبئة الفراغ -->
+              <div class="no-print absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-slate-900/95 backdrop-blur-xs p-1 rounded-lg shadow-lg z-10 flex-wrap max-w-[95%]">
+                <button type="button" onclick="p2AdjustFrameHeight(${i}, 35)" class="text-white hover:text-emerald-400 text-[9px] px-1 font-bold" title="زيادة ارتفاع الإطار لملء الفراغ"><i class="fa-solid fa-arrows-up-down"></i> +</button>
+                <button type="button" onclick="p2AdjustFrameHeight(${i}, -35)" class="text-white hover:text-rose-400 text-[9px] px-1 font-bold" title="تقليص ارتفاع الإطار"><i class="fa-solid fa-arrows-up-down"></i> -</button>
+                <span class="w-[1px] h-3 bg-slate-700"></span>
+                <button type="button" onclick="p2AdjustZoom(${i}, 0.15)" class="text-white hover:text-emerald-300 text-[9px] px-1" title="تكبير الصورة (Zoom In)"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                <button type="button" onclick="p2AdjustZoom(${i}, -0.15)" class="text-white hover:text-amber-300 text-[9px] px-1" title="تصغير الصورة (Zoom Out)"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                <span class="w-[1px] h-3 bg-slate-700"></span>
+                <button type="button" onclick="p2Rotate(${i}, -90)" class="text-white hover:text-cyan-300 text-[9px] px-1" title="لف لليسار 90°"><i class="fa-solid fa-rotate-left"></i></button>
+                <button type="button" onclick="p2Rotate(${i}, 90)" class="text-white hover:text-cyan-300 text-[9px] px-1" title="لف لليمين 90°"><i class="fa-solid fa-rotate-right"></i></button>
+                <span class="w-[1px] h-3 bg-slate-700"></span>
+                <button type="button" onclick="p2ToggleSpan(${i})" class="text-white hover:text-yellow-300 text-[8.5px] px-1 font-bold" title="مضاعفة العرض لخانتين">عرض ⇥</button>
+                <button type="button" onclick="p2ToggleFit(${i})" class="text-white hover:text-sky-300 text-[8px] px-1 font-bold" title="تبديل ملء كامل الإطار (Cover / Contain)">ملاءمة</button>
+              </div>
+            </div>
+
+            <!-- شريط الوصف النصي المستقر بأسفل البطاقة دون ترك أي فراغ ميت -->
+            <div class="evidence-caption text-[10px] font-bold text-slate-800 text-center mt-1.5 py-1 px-1.5 bg-white border border-slate-200 rounded-md cursor-text select-text focus:bg-amber-50 focus:border-amber-400 focus:outline-none transition-colors shrink-0" contenteditable="true" tabindex="0" onclick="if(this.innerText.includes('اضغط للتعديل')){ this.innerText=''; } this.focus();">توثيق الشاهد (${i}) - اضغط للتعديل</div>
+          </div>
+        `;
+      }
+      grid.innerHTML = html;
+    }
+
+    function triggerPage2Upload() {
+      const input = document.getElementById("page2ImageFileInput");
+      if (input) input.click();
+    }
+
+    function handlePage2ImageUpload(event) {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+
+      const count = page2SelectedCount || 4;
+      const limit = Math.min(files.length, count);
+
+      files.slice(0, limit).forEach((file, idx) => {
+        const reader = new FileReader();
+        const slotIdx = idx + 1;
+        reader.onload = (e) => {
+          const imgEl = document.getElementById(`p2_img_${slotIdx}`);
+          const phEl = document.getElementById(`p2_ph_${slotIdx}`);
+          if (imgEl) {
+            imgEl.src = e.target.result;
+            imgEl.classList.remove("hidden");
+            imgEl.style.display = "block";
+            if (phEl) phEl.classList.add("hidden");
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+
+      showToast(`تم تثبيت (${limit}) صور في الصفحة الثانية بنجاح! ✓`);
+      event.target.value = "";
+    }
+
+    function checkPageOverflow() {
+      const sheet = document.getElementById("printableSheet");
+      const warning = document.getElementById("overflowWarning");
+      if (!sheet || !warning) return;
+      if (sheet.scrollHeight > 1130 && targetPageMode === 1) {
+        warning.classList.remove("hidden");
+      } else {
+        warning.classList.add("hidden");
+      }
+    }
+
+    function applySliderZoom(val) {
+      const canvas = document.getElementById("dynamicPageCanvas");
+      const imgs = canvas.querySelectorAll("img.evidence-img, .evidence-card img, [data-evidence-slot] img");
+      imgs.forEach(img => {
+        img.style.height = val + "px";
+        img.style.maxHeight = val + "px";
+        img.style.objectFit = "cover";
+      });
+      checkPageOverflow();
+    }
+
+    function setupPasteSupport() {
+      document.addEventListener("paste", function(e) {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        let imageItem = null;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf("image") !== -1) {
+            imageItem = items[i];
+            break;
+          }
+        }
+        if (!imageItem) return;
+
+        const blob = imageItem.getAsFile();
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const base64 = evt.target.result;
+          const activeEl = document.activeElement;
+          let targetImg = null;
+
+          if (activeEl && activeEl.closest(".evidence-card, [data-evidence-slot]")) {
+            targetImg = activeEl.closest(".evidence-card, [data-evidence-slot]").querySelector("img");
+          } else {
+            const all = document.querySelectorAll("img.evidence-img, .evidence-card img");
+            for (let im of all) {
+              if (!im.src || im.src === window.location.href || im.src.includes("data:image/svg")) {
+                targetImg = im;
+                break;
+              }
+            }
+            if (!targetImg && all.length > 0) targetImg = all[0];
+          }
+
+          if (targetImg) {
+            targetImg.src = base64;
+            targetImg.style.display = "block";
+            targetImg.classList.remove("hidden");
+            targetImg.style.objectFit = "cover";
+            showToast("تم لصق الصورة من الحافظة مباشرة بنجاح! 📋✨");
+            checkPageOverflow();
+          }
+        };
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    let currentQrLink = "https://moe.gov.sa";
+    function initQRCode() {
+      const b1 = document.getElementById("qrcodeBox");
+      const b2 = document.getElementById("qrcodeBox2");
+      if (b1) {
+        b1.innerHTML = "";
+        new QRCode(b1, { text: currentQrLink, width: 44, height: 44, colorDark: "#065f46", colorLight: "#ffffff" });
+      }
+      if (b2 && !document.getElementById("secondPageSheet").classList.contains("hidden")) {
+        b2.innerHTML = "";
+        new QRCode(b2, { text: currentQrLink, width: 44, height: 44, colorDark: "#065f46", colorLight: "#ffffff" });
+      }
+    }
+
+    function promptSetQRCode() {
+      const url = prompt("أدخل رابط الشاهد الرقمي أو المنصة لتوليد رمز الـ QR:", currentQrLink);
+      if (url) {
+        currentQrLink = url;
+        initQRCode();
+        showToast("تم تحديث رمز الاستجابة السريعة (QR Code) بنجاح!");
+      }
+    }
+
+    let activeSelectedImage = null;
+
+    function toggleQrVisibility(isChecked) {
+      const wrap1 = document.getElementById("qrcodeWrapper1");
+      const wrap2 = document.getElementById("qrcodeWrapper2");
+      if (isChecked) {
+        const url = prompt("أدخل رابط الشاهد الرقمي أو المنصة لتوليد الباركود:", currentQrLink);
+        if (url) {
+          currentQrLink = url;
+          initQRCode();
+          if (wrap1) wrap1.classList.remove("hidden");
+          if (wrap2) wrap2.classList.remove("hidden");
+          showToast("تم تفعيل وتوليد الباركود بنجاح! 📱");
+        } else {
+          document.getElementById("qrToggleCheckbox").checked = false;
+        }
+      } else {
+        if (wrap1) wrap1.classList.add("hidden");
+        if (wrap2) wrap2.classList.add("hidden");
+        showToast("تم إخفاء الباركود");
+      }
+    }
+
+    // إدارة سحب موضع الصورة بالفأرة (Drag to Reposition)
+    let isDraggingImg = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let currentPosX = 50;
+    let currentPosY = 50;
+
+    function resetActiveImagePosition() {
+      if (activeSelectedImage) {
+        activeSelectedImage.style.objectPosition = "50% 50%";
+        activeSelectedImage.dataset.posX = "50";
+        activeSelectedImage.dataset.posY = "50";
+        showToast("تمت إعادة الصورة للمنتصف بنجاح");
+      }
+    }
+
+    // تعديل ارتفاع إطار الصورة الفردي لملء أي فراغ أبيض
+    function p2AdjustFrameHeight(idx, delta) {
+      const img = document.getElementById(`p2_img_${idx}`);
+      if (!img) return;
+      const frame = img.parentElement;
+      if (!frame) return;
+      
+      let currentHeight = frame.clientHeight;
+      let newHeight = Math.max(80, Math.min(520, currentHeight + delta));
+      
+      frame.style.height = newHeight + "px";
+      frame.classList.remove('h-32', 'h-36', 'h-40', 'h-44', 'h-48', 'h-56', 'h-64', 'h-72', 'h-96');
+      checkPageOverflow();
+      showToast(`تم ضبط ارتفاع الإطار: ${newHeight}px 📐`);
+    }
+
+    // حركة سحب وتمركز متطابقة هندسياً وحسابياً مع زاوية التدوير
+    document.addEventListener("mousedown", function(e) {
+      const targetImg = e.target.closest("img.evidence-img, .evidence-card img, [data-evidence-slot] img");
+      if (!targetImg) return;
+
+      e.preventDefault();
+      activeSelectedImage = targetImg;
+
+      const focusControls = document.getElementById("imageFocusControls");
+      if (focusControls) focusControls.classList.remove("hidden");
+
+      document.querySelectorAll("img.evidence-img, .evidence-card img, [data-evidence-slot] img").forEach(i => i.classList.remove("ring-2", "ring-amber-500"));
+      targetImg.classList.add("ring-2", "ring-amber-500");
+
+      isDraggingImg = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+
+      currentPosX = parseFloat(targetImg.dataset.posX || "50");
+      currentPosY = parseFloat(targetImg.dataset.posY || "50");
+    });
+
+    document.addEventListener("mousemove", function(e) {
+      if (!isDraggingImg || !activeSelectedImage) return;
+
+      const deltaX = e.clientX - dragStartX;
+      const deltaY = e.clientY - dragStartY;
+
+      const scale = parseFloat(activeSelectedImage.dataset.scale || "1");
+      const rotate = ((parseInt(activeSelectedImage.dataset.rotate || "0", 10) % 360) + 360) % 360;
+      
+      const speedFactor = 0.35 / Math.max(1, scale * 0.7);
+
+      // تصحيح متجهات السحب وفق زاوية التدوير لمنع انعكاس المحاور
+      let rotX = deltaX;
+      let rotY = deltaY;
+
+      if (rotate === 90) {
+        rotX = deltaY;
+        rotY = -deltaX;
+      } else if (rotate === 180) {
+        rotX = -deltaX;
+        rotY = -deltaY;
+      } else if (rotate === 270) {
+        rotX = -deltaY;
+        rotY = deltaX;
+      }
+
+      let newX = Math.max(0, Math.min(100, currentPosX - (rotX * speedFactor)));
+      let newY = Math.max(0, Math.min(100, currentPosY - (rotY * speedFactor)));
+
+      activeSelectedImage.style.objectPosition = `${newX}% ${newY}%`;
+      activeSelectedImage.dataset.posX = newX;
+      activeSelectedImage.dataset.posY = newY;
+    });
+
+    document.addEventListener("mouseup", function() {
+      if (isDraggingImg) {
+        isDraggingImg = false;
+        showToast("تم تثبيت موضع الشاهد بنجاح 🎯");
+      }
+    });
+
+    // تصدير PNG فائق النقاء: عزل مؤقت للتحجيم لمنع تداخل الحروف مع مسافات كتابية متقاربة وأنيقة
+    async function exportDirectPNG() {
+      showToast("جاري معالجة وتصدير الصورة لكامل الوثيقة بدقة نقية...");
+      const p1 = document.getElementById("printableSheet");
+      const p2 = document.getElementById("secondPageSheet");
+      const wrapper = document.getElementById("pagesWrapper");
+      const isTwoPages = targetPageMode === 2 && p2 && !p2.classList.contains("hidden");
+
+      // تجميد مؤقت لأي تأثيرات تحجيم بصري (Scale) قبل الالتقاط لمنع تداخل وتشوه الخطوط
+      const originalTransform = wrapper ? wrapper.style.transform : "";
+      if (wrapper) wrapper.style.transform = "none";
+
+      try {
+        if (!isTwoPages) {
+          const canvas = await html2canvas(p1, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+          if (wrapper) wrapper.style.transform = originalTransform;
+          
+          const link = document.createElement('a');
+          link.download = 'تقرير_شاهد_الأداء_الوظيفي.png';
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+          showToast("تم تصدير الصفحة بدقة نقية بنجاح! 🖼️✓");
+          return;
+        }
+
+        // التقاط الصفحتين كعناصر منفصلة وبأعلى دقة نقاء
+        const canvas1 = await html2canvas(p1, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+        const canvas2 = await html2canvas(p2, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+
+        // إعادة حالة العرض للشاشة فور انتهاء الالتقاط
+        if (wrapper) wrapper.style.transform = originalTransform;
+
+        const mergedCanvas = document.createElement("canvas");
+        const ctx = mergedCanvas.getContext("2d");
+
+        if (pagesArrangement === 'horizontal') {
+          // فاصل كتابي متقارب وأنيق (16 بكسل فقط) لمنع التداخل مع الحفاظ على القرب
+          const gap = 16;
+          mergedCanvas.width = canvas1.width + canvas2.width + gap;
+          mergedCanvas.height = Math.max(canvas1.height, canvas2.height);
+
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, mergedCanvas.width, mergedCanvas.height);
+
+          if (pagesOrderRtl) {
+            // ص1 يمين ثم ص2 يسار (متقاربتان بنسق المجلة أو الكتاب)
+            ctx.drawImage(canvas1, canvas2.width + gap, 0);
+            ctx.drawImage(canvas2, 0, 0);
+          } else {
+            // ص1 يسار ثم ص2 يمين
+            ctx.drawImage(canvas1, 0, 0);
+            ctx.drawImage(canvas2, canvas1.width + gap, 0);
+          }
+        } else {
+          // دمج رأسي متناسق تحت بعضهما
+          const gap = 20;
+          mergedCanvas.width = Math.max(canvas1.width, canvas2.width);
+          mergedCanvas.height = canvas1.height + canvas2.height + gap;
+
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, mergedCanvas.width, mergedCanvas.height);
+
+          ctx.drawImage(canvas1, 0, 0);
+          ctx.drawImage(canvas2, 0, canvas1.height + gap);
+        }
+
+        const link = document.createElement('a');
+        link.download = 'تقرير_شاهد_الأداء_الوظيفي_صفحتان.png';
+        link.href = mergedCanvas.toDataURL("image/png");
+        link.click();
+        showToast("تم تصدير الصفحتين متقاربتين وبدون أي تداخل في النصوص! 🖼️✨");
+
+      } catch (err) {
+        if (wrapper) wrapper.style.transform = originalTransform;
+        console.error(err);
+        showToast("حدث خطأ أثناء تصدير الصورة", true);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initQRCode();
+      setupPasteSupport();
+      setInterval(checkPageOverflow, 1200);
+    });
+
+    function setExtraLargeImages(mode) {
+      const canvas = document.getElementById("dynamicPageCanvas");
+      const grid = canvas.querySelector(".grid, [class*='grid-cols-']");
+      const imgWrappers = canvas.querySelectorAll(".evidence-card, [data-evidence-slot], div:has(> img.evidence-img), div:has(> img)");
+      const allImgs = canvas.querySelectorAll("img.evidence-img, .evidence-img, [data-evidence-slot] img, .evidence-card img");
+
+      if (allImgs.length === 0) {
+        showToast("لا توجد صور شواهد داخل الورقة!", true);
+        return;
+      }
+
+      imgWrappers.forEach(wrap => wrap.style.gridColumn = "");
+
+      if (mode === 'all') {
+        if (grid) {
+          grid.classList.remove("grid-cols-3", "grid-cols-4", "md:grid-cols-4");
+          grid.classList.add("grid-cols-1", "md:grid-cols-2");
+        }
+        allImgs.forEach(img => {
+          img.style.height = "165px";
+          img.style.maxHeight = "165px";
+          img.style.objectFit = "cover";
+        });
+        showToast("تمت إعادة توزيع الشبكة وتكبير كافة الصور بنجاح! 🖼️");
+      } else if (mode === 'custom') {
+        if (imgWrappers.length < 2) {
+          showToast("يلزم وجود صورتين على الأقل لتفعيل العرض المزدوج!", true);
+          return;
+        }
+
+        const choice = prompt(`أي صورة تريد جعلها كبيرة جداً بحجم صورتين؟\nأدخل رقم الصورة من 1 إلى ${imgWrappers.length}:`, "1");
+        if (!choice) return;
+
+        const idx = parseInt(choice, 10) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= imgWrappers.length) {
+          showToast("رقم الصورة غير صحيح!", true);
+          return;
+        }
+
+        allImgs.forEach(img => {
+          img.style.height = "96px";
+          img.style.maxHeight = "96px";
+          img.style.objectFit = "cover";
+        });
+
+        const selectedWrap = imgWrappers[idx];
+        selectedWrap.style.gridColumn = "span 2 / span 2";
+
+        const selectedImg = selectedWrap.querySelector("img");
+        if (selectedImg) {
+          selectedImg.style.height = "150px";
+          selectedImg.style.maxHeight = "150px";
+          selectedImg.style.objectFit = "cover";
+        }
+
+        showToast(`تم جعل الصورة رقم (${idx + 1}) كبيرة جداً بحجم مضاعف! ⭐`);
+      }
+      checkPageOverflow();
+    }
+
+    function triggerImageUpload() {
+      document.getElementById("batchImageInput").click();
+    }
+
+    function handleImageSelection(event) {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+
+      const canvas = document.getElementById("dynamicPageCanvas");
+      // البحث عن كل الصور أو الحاويات المخصصة للشواهد
+      let targetElements = canvas.querySelectorAll("img.evidence-img, .evidence-img img, img, .evidence-placeholder");
+
+      // إذا لم يجد وسوم صور جاهزة، يبحث عن كروت وحاويات الصور
+      if (targetElements.length === 0) {
+        targetElements = canvas.querySelectorAll("[data-evidence-slot], .evidence-card, .evidence-slot");
+      }
+
+      if (targetElements.length === 0) {
+        showToast("لم يتم العثور على أماكن مخصصة للصور داخل الورقة!", true);
+        return;
+      }
+
+      const maxCount = Math.min(files.length, targetElements.length);
+      let loadedCount = 0;
+
+      files.slice(0, maxCount).forEach((file, index) => {
+        const reader = new FileReader();
+        const slot = targetElements[index];
+
+        reader.onload = (e) => {
+          const base64Data = e.target.result;
+
+          if (slot.tagName.toLowerCase() === 'img') {
+            slot.src = base64Data;
+            slot.style.display = "block";
+            slot.classList.remove("hidden");
+            slot.style.objectFit = "cover";
+          } else {
+            // الحفاظ على الحاوية وإزالة عبارة إرفاق الصورة تلقائياً
+            let existingImg = slot.querySelector("img");
+            if (!existingImg) {
+              existingImg = document.createElement("img");
+              existingImg.className = "evidence-img w-full h-24 object-cover rounded-lg shadow-sm mb-1";
+              slot.insertBefore(existingImg, slot.firstChild);
+            }
+            existingImg.src = base64Data;
+            existingImg.style.display = "block";
+            existingImg.classList.remove("hidden");
+
+            // تفريغ النص التوجيهي عند إرفاق الصورة
+            const captionEl = slot.querySelector('.evidence-caption, [contenteditable="true"]');
+            if (captionEl && /إرفاق الصورة|ارفق الصورة/i.test(captionEl.innerText)) {
+              captionEl.innerText = '';
+            }
+          }
+
+          loadedCount++;
+          if (loadedCount === maxCount) {
+            showToast(`تم إظهار وتثبيت ${loadedCount} صورة بنجاح! ✓`);
+          }
+        };
+
+        reader.readAsDataURL(file);
+      });
+
+      event.target.value = "";
+    }
+
+    function switchPromptMode(mode) {
+      currentPromptMode = mode;
+      const box = document.getElementById("aiPromptBox");
+      const btnFiles = document.getElementById("modeFilesBtn");
+      const btnText = document.getElementById("modeTextBtn");
+
+      if (!box || !btnFiles || !btnText) return;
+
+      // توليد نص البرومبت ديناميكياً مع مراعاة عدد الصور المختار
+      box.value = buildPreset(mode, selectedImageCount);
+
+      if (mode === 'text') {
+        btnText.className = "text-[9.5px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white transition";
+        btnFiles.className = "text-[9.5px] font-bold px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition";
+        showToast("تم تفعيل برومبت الصياغة المباشرة (بدون مرفقات)");
+      } else {
+        btnFiles.className = "text-[9.5px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white transition";
+        btnText.className = "text-[9.5px] font-bold px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition";
+        showToast("تم تفعيل برومبت تحليل المرفقات");
+      }
+    }
+
+    function resetAiPrompt() {
+      switchPromptMode(currentPromptMode);
+      showToast("تمت استعادة صيغة البرومبت المعتمدة بنجاح!");
+    }
+
+    // تفريغ وحذف كل النصوص القابلة للتعديل في التقرير
+    function clearAllTexts() {
+      if (!confirm("هل أنت متأكد من حذف وتفريغ جميع النصوص القابلة للتعديل في الورقة؟")) return;
+      const sheet = document.getElementById("printableSheet");
+      const editables = sheet.querySelectorAll('[contenteditable="true"]');
+      editables.forEach(el => {
+        el.dataset.previousText = el.innerText;
+        el.innerText = "";
+      });
+      showToast("تم تفريغ كافة النصوص بنجاح لتعبئتها يدوياً.");
+    }
+
+    // استعادة وإبقاء النصوص الأصلية
+    function restoreAllTexts() {
+      const sheet = document.getElementById("printableSheet");
+      const editables = sheet.querySelectorAll('[contenteditable="true"]');
+      let restoredCount = 0;
+      editables.forEach(el => {
+        if (el.dataset.previousText !== undefined) {
+          el.innerText = el.dataset.previousText;
+          restoredCount++;
+        }
+      });
+      showToast("تم استعادة كافة النصوص بنجاح!");
+    }
+
+    // حفظ المستند الكامل كملف HTML مستقل
+    function saveAsHtmlFile() {
+      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.href = URL.createObjectURL(blob);
+      downloadAnchor.download = "تقرير_الأداء_الوظيفي_نايف_الشومر.html";
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      document.body.removeChild(downloadAnchor);
+      showToast("تم حفظ الملف بصيغة HTML بنجاح!");
+    }
+  </script>
+
+</body></html>
