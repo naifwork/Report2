@@ -17,10 +17,16 @@
 
   <!-- Chart.js للمخططات والرسوم البيانية -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- مكتبات التصدير المباشر PDF و PNG ومولد QR Code -->
+  <!-- مكتبات التصدير المباشر PDF و PNG ومولد QR Code ومحرك قراءة وتصيير PDF كصورة -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    }
+  </script>
 
   <style>
     :root {
@@ -105,7 +111,6 @@
       .no-print {
         display: none !important;
       }
-      /* عزل الصفحات هندسياً في الطباعة وإلغاء أي تحجيم أو تجاور بصري */
       #pagesWrapper {
         display: block !important;
         width: 100% !important;
@@ -138,6 +143,127 @@
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
+      #evidenceFloatingToolbar {
+        display: none !important;
+      }
+    }
+
+    /* فلاتر ومعالجة الشواهد */
+    .filter-scanner {
+      filter: grayscale(100%) contrast(180%) brightness(115%) !important;
+    }
+    .filter-sharpen {
+      filter: contrast(145%) brightness(95%) !important;
+    }
+    .official-border {
+      outline: 1.5px solid #94a3b8 !important;
+      outline-offset: -1.5px !important;
+    }
+
+    /* شريط معالجة الشواهد العائم وتأثيرات العناصر الحرة */
+    #evidenceFloatingToolbar {
+      position: absolute;
+      display: none;
+      z-index: 99999;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 4px 8px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      gap: 4px;
+      align-items: center;
+      direction: rtl;
+      user-select: none;
+      backdrop-filter: blur(8px);
+    }
+
+    /* كائن التغبيش والعدسة التفاعلي القابل للسحب والتحكم - معالجة التصدير والطباعة */
+    .interactive-overlay-item {
+      position: absolute;
+      cursor: move;
+      user-select: none;
+      z-index: 25;
+      touch-action: none;
+      border-radius: 50%;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .interactive-blur {
+      /* حجب حقيقي يظهر معتماً في الشاشة والتصدير والطباعة بنسبة 100% */
+      background: radial-gradient(circle, rgba(226, 232, 240, 0.98) 0%, rgba(203, 213, 225, 0.95) 75%, rgba(148, 163, 184, 0.9) 100%) !important;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18), inset 0 0 10px rgba(148, 163, 184, 0.5) !important;
+      border: 1.5px solid rgba(148, 163, 184, 0.8) !important;
+    }
+    .interactive-spotlight {
+      border: 3.5px solid #e11d48 !important;
+      box-shadow: 0 0 12px rgba(225, 29, 72, 0.5), inset 0 0 8px rgba(225, 29, 72, 0.2) !important;
+      background: transparent !important;
+    }
+    .overlay-del-btn {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 18px;
+      height: 18px;
+      background: #e11d48;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 900;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      z-index: 30;
+    }
+    .overlay-resize-handle {
+      position: absolute;
+      bottom: -4px;
+      left: -4px;
+      width: 14px;
+      height: 14px;
+      background: #0284c7;
+      border: 1.5px solid #fff;
+      border-radius: 50%;
+      cursor: nwse-resize;
+      z-index: 30;
+    }
+    @media print {
+      .overlay-del-btn, .overlay-resize-handle {
+        display: none !important;
+      }
+      .interactive-blur {
+        background: #cbd5e1 !important;
+        border: 1px solid #94a3b8 !important;
+      }
+    }
+    #evidenceFloatingToolbar button {
+      background: transparent;
+      border: none;
+      color: #f1f5f9;
+      padding: 4px 7px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    #evidenceFloatingToolbar button:hover {
+      background: #334155;
+      color: #38bdf8;
+    }
+    #evidenceFloatingToolbar .tb-divider {
+      width: 1px;
+      height: 16px;
+      background: #475569;
+      margin: 0 2px;
     }
 
     /* نافذة التنبيه السريع المدمجة */
@@ -150,7 +276,7 @@
       border-radius: 8px;
       padding: 10px 18px;
       position: fixed;
-      z-index: 99999;
+      z-index: 999999;
       left: 50%;
       bottom: 25px;
       transform: translateX(-50%);
@@ -167,10 +293,76 @@
 </head>
 <body class="py-3 px-2">
 
+  <!-- ==================== شاشة الصيانة والحماية الذكية ==================== -->
+  <div id="maintenanceOverlay" class="no-print fixed inset-0 z-[9999999] flex flex-col items-center justify-center bg-slate-950/85 backdrop-blur-xl p-4 select-none transition-opacity duration-300">
+    <div class="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl flex flex-col items-center">
+      
+      <!-- أيقونة الصيانة: النقر عليها 5 مرات متتالية يفتح الصفحة فوراً -->
+      <div id="secretMaintenanceIcon" onclick="handleSecretUnlock()" class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-3xl mb-4 cursor-pointer active:scale-95 transition-transform" title="النظام">
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+      </div>
+
+      <h2 class="text-base font-black text-white mb-2">النظام في مرحلة التحديث والتطوير</h2>
+      <p class="text-xs text-slate-300 leading-relaxed mb-4">
+        الموقع يخضع حالياً لعمليات صيانة دورية. الرجاء العودة لاحقاً.
+      </p>
+
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-[10px] text-slate-400 font-bold">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+        <span>تحديث</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // تفعيل الفتح السري وحفظ الجلسة تلقائياً
+    let secretTapCount = 0;
+    let secretTapTimer = null;
+
+    function handleSecretUnlock() {
+      secretTapCount++;
+      clearTimeout(secretTapTimer);
+      secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 2000);
+
+      if (secretTapCount >= 5) {
+        secretTapCount = 0;
+        clearTimeout(secretTapTimer);
+        const overlay = document.getElementById("maintenanceOverlay");
+        if (overlay) {
+          overlay.style.opacity = "0";
+          setTimeout(() => { overlay.style.display = "none"; }, 300);
+        }
+        sessionStorage.setItem("site_maintenance_unlocked", "true");
+        if (typeof showToast === "function") showToast("مرحباً بك! تم إلغاء قفل الصيانة بنجاح 🔓✨");
+      }
+    }
+
+    if (sessionStorage.getItem("site_maintenance_unlocked") === "true") {
+      document.addEventListener("DOMContentLoaded", () => {
+        const overlay = document.getElementById("maintenanceOverlay");
+        if (overlay) overlay.style.display = "none";
+      });
+    }
+  </script>
+
   <!-- إشعار Toast كبديل لـ alert() -->
   <div id="toastNotice" class="flex items-center gap-2 justify-center text-xs font-bold">
     <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
     <span id="toastMsg">تمت العملية بنجاح</span>
+  </div>
+
+  <!-- شريط معالجة الشواهد العائم الجديد (يظهر عند النقر على أي صورة) -->
+  <div id="evidenceFloatingToolbar" class="no-print">
+    <button type="button" onclick="handleToolbarAction('blur')" title="تغبيش دائري ناعم لحجب الوجوه أو السجلات"><i class="fa-solid fa-mask text-amber-400"></i> تغبيش</button>
+    <button type="button" onclick="handleToolbarAction('spotlight')" title="عدسة تركيز وتمييز موضع محدد"><i class="fa-solid fa-bullseye text-rose-400"></i> عدسة</button>
+    <div class="tb-divider"></div>
+    <button type="button" onclick="handleToolbarAction('scanner')" title="نمط المستند لتبييض الخلفية وإزالة الظلال"><i class="fa-solid fa-file-lines text-sky-400"></i> سكانر</button>
+    <button type="button" onclick="handleToolbarAction('sharpen')" title="شحذ الخطوط والأختام الباهتة"><i class="fa-solid fa-wand-magic text-emerald-400"></i> شحذ</button>
+    <button type="button" onclick="handleToolbarAction('border')" title="حد خارجي رفيع يفصل الورقة"><i class="fa-regular fa-square text-slate-300"></i> إطار</button>
+    <div class="tb-divider"></div>
+    <button type="button" onclick="handleToolbarAction('fit')" title="تبديل ملاءمة الإطار مباشرة (احتواء / ملء)"><i class="fa-solid fa-expand text-blue-400"></i> ملاءمة</button>
+    <div class="tb-divider"></div>
+    <button type="button" onclick="handleToolbarAction('reset')" class="text-rose-400 hover:text-rose-300" title="إلغاء التأثيرات واستعادة الصورة الأصلية"><i class="fa-solid fa-rotate-left"></i> ضبط</button>
   </div>
 
   <!-- ==================== شريط التحكم والبرومبت العلوي (خارج الورقة) ==================== -->
@@ -207,13 +399,64 @@
         <button onclick="window.print()" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-black flex items-center gap-1.5 shadow transition">
           <i class="fa-solid fa-print"></i> طباعة A4
         </button>
+        <button type="button" onclick="lockScreenNow()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-rose-950/80 border border-slate-700 hover:border-rose-700 text-amber-400 hover:text-rose-300 rounded-lg text-xs font-black transition flex items-center gap-1 shadow" title="حجب الشاشة وقفل الخصوصية الفوري">
+          <i class="fa-solid fa-lock"></i> قفل
+        </button>
       </div>
+
+  <script>
+    // دالة القفل السريع للخصوصية وتغيير الواجهة إلى (جاري التحديث 👓)
+    function lockScreenNow() {
+      sessionStorage.removeItem("site_maintenance_unlocked");
+      const overlay = document.getElementById("maintenanceOverlay");
+      const titleEl = overlay ? overlay.querySelector("h2") : null;
+      const subEl = overlay ? overlay.querySelector("p") : null;
+      const iconEl = document.getElementById("secretMaintenanceIcon");
+
+      if (titleEl) titleEl.innerText = "تنبيه: لا تحدث الصفحة ";
+      if (subEl) subEl.innerText = "⌛";
+      if (iconEl) iconEl.innerHTML = '<span class="text-3xl">👓</span>';
+
+      if (overlay) {
+        overlay.style.display = "flex";
+        setTimeout(() => { overlay.style.opacity = "1"; }, 10);
+      }
+      if (typeof showToast === "function") showToast("تم قفل الشاشة: جاري التحديث 👓");
+    }
+
+    // إعادة ضبط نصوص الصيانة عند الفتح لتظل رسالة الصيانة العامة كما هي للمستخدمين الجدد
+    window.handleSecretUnlock = function() {
+      secretTapCount++;
+      clearTimeout(secretTapTimer);
+      secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 2000);
+
+      if (secretTapCount >= 5) {
+        secretTapCount = 0;
+        clearTimeout(secretTapTimer);
+        const overlay = document.getElementById("maintenanceOverlay");
+        if (overlay) {
+          overlay.style.opacity = "0";
+          setTimeout(() => {
+            overlay.style.display = "none";
+            const titleEl = overlay.querySelector("h2");
+            const subEl = overlay.querySelector("p");
+            const iconEl = document.getElementById("secretMaintenanceIcon");
+            if (titleEl) titleEl.innerText = "النظام في مرحلة التحديث والتطوير";
+            if (subEl) subEl.innerText = "الموقع يخضع حالياً لعمليات صيانة دورية وتحديثات أمنية مجدولة. الرجاء العودة لاحقاً.";
+            if (iconEl) iconEl.innerHTML = '<i class="fa-solid fa-screwdriver-wrench"></i>';
+          }, 300);
+        }
+        sessionStorage.setItem("site_maintenance_unlocked", "true");
+        if (typeof showToast === "function") showToast("مرحباً بك! تم إلغاء القفل بنجاح 🔓✨");
+      }
+    };
+  </script>
     </div>
 
     <!-- السطر الثاني: صندوق البرومبت الذكي + صندوق إدراج الكود وتطبيقه -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
       
-      <!-- 1. صندوق البرومبت المحدث بوضعين: تحليل ملفات / صياغة مباشرة بدون ملفات -->
+      <!-- 1. صندوق البرومبت المحدث بقائمة الأنماط والخيارات الذكية -->
       <div class="bg-slate-800/80 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between mb-1.5 flex-wrap gap-1">
@@ -224,20 +467,18 @@
               <button onclick="switchPromptMode('files')" id="modeFilesBtn" class="text-[9.5px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white transition">تحليل مرفقات 📎</button>
               <button onclick="switchPromptMode('text')" id="modeTextBtn" class="text-[9.5px] font-bold px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition">صياغة مباشرة ✍️</button>
 
-              <!-- زر التبديل بين صفحة واحدة وصفحتين + أدوات نسق عرض الصفحتين (تحت بعض / بجانب بعض / يمين ويسار) -->
+              <!-- زر التبديل بين صفحة واحدة وصفحتين + أدوات نسق عرض الصفحتين -->
               <div class="flex items-center gap-1 bg-slate-900 border border-slate-700 px-1.5 py-0.5 rounded flex-wrap">
                 <i class="fa-regular fa-file-lines text-sky-400 text-[10px]"></i>
                 <button type="button" onclick="setPageCountMode(1)" id="btnPage1" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-600 text-white transition">صفحة 1</button>
                 <button type="button" onclick="setPageCountMode(2)" id="btnPage2" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition">صفحتان 2</button>
                 
-                <!-- خيارات طريقة عرض الصفحتين + أزرار الملاءمة التلقائية ونسب التكبير للشاشة -->
                 <div id="pagesArrangementControls" class="hidden flex items-center gap-1 border-r border-slate-700 pr-1.5 mr-0.5 flex-wrap">
                   <span class="text-[8.5px] text-sky-300 font-bold">العرض:</span>
                   <button type="button" id="btnViewVertical" onclick="setPagesArrangement('vertical')" class="text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-sky-600 text-white transition" title="عرض الصفحات تحت بعضها عمودياً">عمودي ⯅⯆</button>
                   <button type="button" id="btnViewHorizontal" onclick="setPagesArrangement('horizontal')" class="text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition" title="عرض الصفحات بجانب بعضها ككتاب">متجاور ⯇⯈</button>
                   <button type="button" id="btnOrderSwap" onclick="togglePagesOrder()" class="hidden text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-amber-700/80 hover:bg-amber-600 text-amber-100 transition" title="تبديل موقع الصفحة 1 بين اليمين واليسار"><span id="orderSwapLabel">ص1 يمين</span> ⇄</button>
 
-                  <!-- أزرار حجم ملاءمة الشاشة التلقائي (تعمل فقط في العرض المتجاور) -->
                   <div id="screenFitGroup" class="hidden flex items-center gap-0.5 bg-slate-950/80 border border-slate-700 px-1 py-0.5 rounded">
                     <span class="text-[8px] text-emerald-300 font-bold">الحجم:</span>
                     <button type="button" onclick="applyPagesScale('auto')" id="scaleBtn_auto" class="text-[8px] font-bold px-1 py-0.5 rounded bg-emerald-600 text-white transition" title="ملاءمة تلقائية مع عرض شاشتك الحالي">تلقائي</button>
@@ -248,13 +489,12 @@
                 </div>
               </div>
 
-              <!-- قسم شواهد الصفحة الثانية: يظهر متناسقاً وبجوار خيارات نسق العرض -->
+              <!-- شواهد الصفحة الثانية -->
               <div id="page2PhotoControls" class="hidden flex items-center gap-1.5 bg-emerald-950/90 border border-emerald-600/80 px-2 py-0.5 rounded flex-wrap">
                 <span class="text-[9.5px] font-black text-emerald-300 flex items-center gap-1">
                   <i class="fa-solid fa-images"></i> شواهد ص2:
                 </span>
                 
-                <!-- 1. عدد الصور (1 إلى 8) -->
                 <select id="p2ImageCountSelect" onchange="onPage2CountSelected(this.value)" class="bg-emerald-900 text-white text-[9px] font-bold rounded px-1.5 py-0.5 outline-none border border-emerald-500 cursor-pointer">
                   <option value="" disabled selected>العدد...</option>
                   <option value="1">صورة (1)</option>
@@ -267,22 +507,20 @@
                   <option value="8">8 صور</option>
                 </select>
 
-                <!-- 2. نسق وترتيب العرض (طولي انسيابي / عرضي شبكي) -->
                 <div id="p2LayoutControls" class="hidden flex items-center gap-1 bg-slate-900 border border-emerald-700/60 px-1 py-0.5 rounded">
                   <span class="text-[8.5px] text-emerald-200 font-bold">التنسيق:</span>
                   <button type="button" id="p2LayoutGridBtn" onclick="setPage2Layout('grid')" class="text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white transition" title="عرض أفقي شبكي متوازن">أفقي ▤</button>
                   <button type="button" id="p2LayoutColBtn" onclick="setPage2Layout('column')" class="text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition" title="عرض طولي انسيابي ممتد">طولي ▮</button>
                 </div>
 
-                <!-- 3. زر إرفاق الصور المخصص للصفحة الثانية -->
                 <button type="button" id="p2UploadBtn" onclick="triggerPage2Upload()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded transition flex items-center gap-1 shadow-sm">
                   <i class="fa-solid fa-cloud-arrow-up"></i>
                   <span id="p2UploadLabel">إرفاق</span>
                 </button>
-                <input type="file" id="page2ImageFileInput" accept="image/*" multiple class="hidden" onchange="handlePage2ImageUpload(event)">
+                <input type="file" id="page2ImageFileInput" accept="image/*,application/pdf" multiple class="hidden" onchange="handlePage2ImageUpload(event)">
               </div>
 
-              <!-- خيار تفعيل الباركود الاختياري -->
+              <!-- الباركود الاختياري -->
               <label class="flex items-center gap-1 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded cursor-pointer select-none">
                 <input type="checkbox" id="qrToggleCheckbox" onchange="toggleQrVisibility(this.checked)" class="accent-emerald-500 rounded cursor-pointer">
                 <span class="text-[9.5px] font-bold text-slate-300 flex items-center gap-1">
@@ -290,7 +528,7 @@
                 </span>
               </label>
 
-              <!-- أدوات ضبط موضع والتركيز البؤري للصورة مع السحب اليدوي -->
+              <!-- أدوات ضبط موضع الصورة بالسحب -->
               <div id="imageFocusControls" class="hidden flex items-center gap-1.5 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded">
                 <span class="text-[9px] font-bold text-amber-300 flex items-center gap-1">
                   <i class="fa-solid fa-arrows-up-down-left-right"></i> اسحب الصورة بالفأرة للتحريك
@@ -300,12 +538,12 @@
                 </button>
               </div>
 
-              <!-- تنبيه تجاوز الصفحة الذكي -->
+              <!-- تنبيه تجاوز الصفحة -->
               <span id="overflowWarning" class="hidden text-[9px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/50 flex items-center gap-1 animate-pulse">
                 <i class="fa-solid fa-triangle-exclamation"></i> المحتوى قارب على تجاوز A4
               </span>
               
-              <!-- خيار تحديد عدد الصور المدمجة -->
+              <!-- عدد الصور المدمجة -->
               <div class="flex items-center gap-1 bg-slate-900 border border-slate-700 px-1.5 py-0.5 rounded">
                 <i class="fa-regular fa-image text-amber-400 text-[10px]"></i>
                 <label for="imageCountSelect" class="text-[9px] text-slate-300 font-bold">الصور:</label>
@@ -327,22 +565,28 @@
               </button>
             </div>
           </div>
-          <textarea id="aiPromptBox" class="w-full h-28 text-[10px] font-mono p-2 bg-slate-900 border border-slate-700 rounded text-slate-200 leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-emerald-500">حلل الملفات المرفقة واستخرج بيانات المعيار المطلوب، ثم برمج لي "محتوى داخلي فقط" ليتم حقنه في وسط صفحة A4 مجهزة ومصممة مسبقاً:
 
-شروط برمجية صارمة جداً لمنع تكرار عناصر الصفحة:
-1. ممنوع نهائياً توليد ترويسة (اسم الوزارة، الإدارة، المدرسة، عنوان التقرير)، وممنوع إضافة اسم المعلم أو المدير أو التواقيع نهائياً لأنها مبنية وموجودة في الصفحة مسبقاً.
-2. لا تضع أي غلاف خارجي أو إطار صفحة (مثل class="a4-page" أو كروت وهوامش تجعلها تبدو كصفحة مستقلة).
-3. الكود الناتج يجب أن يكون عبارة عن عنصر <div> مرن ومباشر يحتوي فقط على:
-   - بطاقات مؤشرات أداء رئيسية (KPIs) أفقية وأنيقة.
-   - وصف موجز للإنجاز والأثر التعليمي.
-   - مصفوفة شواهد أو جدول إحصائي للمقارنة.
-   - رسم بياني تفاعلي عبر Chart.js داخل وسم &lt;canvas&gt; مع سكريبت تشغيله فوراً.
-4. استخدم خط 'Alyamama' مع Tailwind CSS وألوان التعليم الرسمية (#065f46، الذهبي، والرمادي).
-5. اجعل كافة النصوص والأرقام قابلة للتعديل المباشر (contenteditable="true").
-6. استغل المساحة بشكل مضغوط ومحكم ليناسب الارتفاع المتبقي من صفحة A4 دون تجاوز الورقة عند الطباعة.
-7. لا تكتب أي مقدمات أو شروحات، فقط أعطني كود الـ HTML / JS محاطاً بعلامات ```html فقط.</textarea>
+          <!-- قائمة أنماط الصياغة والبرومبات المنسدلة (9 أنماط دقيقة ومستقلة) -->
+          <div class="mb-1.5 flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 px-2 py-1 rounded">
+            <label for="promptToneSelector" class="text-[9.5px] font-black text-amber-300 shrink-0 flex items-center gap-1">
+              <i class="fa-solid fa-sliders"></i> نمط الصياغة:
+            </label>
+            <select id="promptToneSelector" onchange="onToneStyleSelected(this.value)" class="bg-slate-800 text-slate-100 text-[9.5px] font-bold rounded px-2 py-0.5 outline-none border border-slate-600 cursor-pointer w-full">
+              <option value="standard" selected>⭐ النمط القياسي (الأصلي - توازن عام)</option>
+              <option value="descriptive">📝 وصفي / سردي (لغة تربوية متدفقة بلا أرقام)</option>
+              <option value="statistical">📊 إحصائي ومؤشرات أداء (تركيز كمي ونسب إنجاز)</option>
+              <option value="compact">⚡ إجرائي مكثف وموجز (نقاط سريعة وخاطفة)</option>
+              <option value="official_admin">🏛️ تقرير نصي رسمي (أسلوب إداري ومحاضر ولجان)</option>
+              <option value="recognition">🏆 تكريم وإنجازات ومسابقات (نتائج وتنافس)</option>
+              <option value="initiative">💡 مبادرة أو فكرة ابتكارية (هيكل ريادي)</option>
+              <option value="field_visit">🤝 زيارة ميدانية وشراكة مجتمعية</option>
+              <option value="enrichment">📋 برنامج إثرائي / مهارات تفكير عليا</option>
+            </select>
+          </div>
+
+          <textarea id="aiPromptBox" class="w-full h-24 text-[10px] font-mono p-2 bg-slate-900 border border-slate-700 rounded text-slate-200 leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-emerald-500"></textarea>
         </div>
-        <p class="text-[9.5px] text-slate-400 mt-1">يمكنك التبديل بين البرومبتين أعلاه، أو تعديل أي سطر قبل النسخ.</p>
+        <p class="text-[9.5px] text-slate-400 mt-1">تتيح لك القائمة المنسدلة أعلاه توجيه أسلوب الذكاء دون المساس بهيكل ورقة الـ A4 أو الشواهد.</p>
       </div>
 
       <!-- 2. صندوق إدراج ولصق الكود وتطبيقه فوراً -->
@@ -365,13 +609,12 @@
             <i class="fa-solid fa-play"></i> تطبيق الكود فوراً على الورقة
           </button>
 
-          <!-- أدوات ضبط حجم ونمط خط النصوص بنمط التحديد التفاعلي الذكي (Pick & Target) -->
+          <!-- أدوات ضبط حجم ونمط خط النصوص بنمط التحديد التفاعلي الذكي -->
           <div id="canvasTextControls" class="flex items-center gap-1 bg-slate-900 border border-slate-700 px-2 py-1 rounded-lg flex-wrap">
             <span class="text-[9px] font-bold text-sky-300 flex items-center gap-1">
               <i class="fa-solid fa-font"></i> الخط:
             </span>
             
-            <!-- قائمة النطاق المدمجة بخيار التحديد المباشر -->
             <select id="canvasTextScope" onchange="onScopeChange(this.value)" class="bg-slate-800 text-sky-200 text-[8.5px] font-bold rounded px-1.5 py-0.5 outline-none border border-slate-600 cursor-pointer">
               <option value="all">الكل</option>
               <option value="headings">العناوين فقط</option>
@@ -379,26 +622,22 @@
               <option value="custom" id="optCustomTarget">🎯 الجزء المحدد (انقر للاختيار)</option>
             </select>
 
-            <!-- زر أداة مؤشر التحديد التفاعلي -->
             <button type="button" onclick="togglePickerMode()" id="canvasPickerBtn" class="px-2 py-0.5 rounded text-[8.5px] font-black bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-600 transition flex items-center gap-1" title="تفعيل الفأرة للنقر على أي جزء داخل الورقة لتخصيصه بمفرده">
               <i class="fa-solid fa-crosshairs"></i>
               <span id="pickerBtnText">تحديد جزء</span>
             </button>
 
-            <!-- شارة تبين اسم الجزء النشط حالياً -->
             <span id="pickedTargetBadge" class="hidden text-[8px] font-bold bg-emerald-950 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-600 animate-pulse">جزء مخصص ✓</span>
 
-            <!-- أزرار الحجم -->
             <button type="button" onclick="adjustCanvasFontSize(1)" class="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 transition" title="تكبير الحجم للنطاق أو الجزء المختار">A+</button>
             <button type="button" onclick="adjustCanvasFontSize(-1)" class="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 transition" title="تصغير الحجم للنطاق أو الجزء المختار">A-</button>
             <button type="button" onclick="resetCanvasFontSize()" class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 transition" title="استعادة الحجم الأصلي">الأصل</button>
             <span class="w-[1px] h-3 bg-slate-700 mx-0.5"></span>
             
-            <!-- زر التسويد المنفصل -->
             <button type="button" onclick="toggleCanvasFontWeight()" id="canvasBoldBtn" class="px-2 py-0.5 rounded text-[9px] font-black bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-600 transition" title="تبديل الخط العريض (Bold)">B عريض</button>
           </div>
           
-          <!-- أدوات إرفاق الصور والتحكم بحجمها (تظهر تلقائياً عند وجود صور) -->
+          <!-- أدوات إرفاق الصور والتحكم بحجمها -->
           <div id="imageControlsWrapper" class="hidden flex items-center gap-1.5 flex-wrap">
             <button id="uploadImagesBtn" onclick="triggerImageUpload()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-black py-1.5 px-3 rounded-lg transition flex items-center justify-center gap-1 shadow">
               <i class="fa-solid fa-upload"></i> إرفاق الصور
@@ -409,7 +648,6 @@
               <button type="button" onclick="changeImageSize('md')" id="sizeBtn_md" class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-600 text-white transition">متوسط</button>
               <button type="button" onclick="changeImageSize('lg')" id="sizeBtn_lg" class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-700 hover:bg-slate-600 text-slate-200 transition">كبير</button>
               
-              <!-- شريط انزلاقي سلس للتحكم المتزامن بالصورة والإطار -->
               <div class="flex items-center gap-1 border-r border-slate-600 pr-1.5 mr-1">
                 <i class="fa-solid fa-magnifying-glass-minus text-[9px] text-slate-400"></i>
                 <input type="range" id="imageZoomSlider" min="55" max="220" value="96" oninput="applySliderZoom(this.value)" class="w-16 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500" title="تحريك يميناً للتكبير ويساراً للتصغير">
@@ -423,23 +661,22 @@
               </div>
             </div>
           </div>
-          <input type="file" id="batchImageInput" accept="image/*" multiple class="hidden" onchange="handleImageSelection(event)">
+          <input type="file" id="batchImageInput" accept="image/*,application/pdf" multiple class="hidden" onchange="handleImageSelection(event)">
         </div>
       </div>
 
     </div>
   </header>
 
-  <!-- حاوية الصفحات الموحدة المزودة بمحرك التحجيم التلقائي -->
+  <!-- حاوية الصفحات الموحدة -->
   <div id="pagesWrapper" class="flex flex-col items-center justify-center gap-0 w-full transition-transform duration-200 origin-top">
 
   <!-- ==================== ورقة التقرير المعتمدة (A4 القياسية) ==================== -->
   <main class="a4-page" id="printableSheet">
 
-    <!-- 1. الترويسة الرسمية المختصرة والأنيقة (قابلة للتعديل بالكامل) -->
+    <!-- 1. الترويسة الرسمية المختصرة والأنيقة -->
     <header class="border-b-2 border-emerald-900 pb-2 mb-2">
       <div class="flex items-center justify-between text-right">
-        <!-- يمين: بيانات الدولة والوزارة والإدارة والمدرسة الثابتة -->
         <div class="text-[10px] leading-tight space-y-0.5">
           <p class="font-black text-slate-950 text-[11px]" contenteditable="true">المملكة العربية السعودية</p>
           <p class="font-bold text-slate-800" contenteditable="true">وزارة التعليم</p>
@@ -447,7 +684,6 @@
           <p class="text-emerald-900 font-black text-[10.5px]" contenteditable="true">مدرسة الموهوبين العامة بنين</p>
         </div>
 
-        <!-- وسط: عنوان الوثيقة الرسمية والاعتماد -->
         <div class="text-center">
           <h2 class="text-sm font-black text-slate-900 mt-1" contenteditable="true" id="reportHeaderTitle">
             تقرير وشاهد إنجاز الأداء الوظيفي
@@ -457,7 +693,6 @@
           </p>
         </div>
 
-        <!-- يسار: رمز الاستجابة السريعة QR Code (مخفي افتراضياً واختياري بالكامل) -->
         <div class="w-32 flex flex-col items-center justify-center">
           <div id="qrcodeWrapper1" class="hidden flex flex-col items-center justify-center">
             <div id="qrcodeBox" class="p-1 bg-white border border-slate-200 rounded shadow-xs cursor-pointer" onclick="promptSetQRCode()" title="انقر لتعديل رابط الباركود"></div>
@@ -467,7 +702,7 @@
       </div>
     </header>
 
-    <!-- 2. مساحة العمل البيضاء النظيفة (Dynamic Content Canvas) -->
+    <!-- 2. مساحة العمل البيضاء النظيفة -->
     <div id="dynamicPageCanvas" class="flex-1 flex flex-col justify-start overflow-hidden">
       
       <!-- حالة الظهور الافتراضية الفارغة -->
@@ -481,23 +716,20 @@
 
     </div>
 
-    <!-- 3. تذييل التواقيع والاعتماد الثابت (نايف الشومر ومدير المدرسة) -->
+    <!-- 3. تذييل التواقيع والاعتماد الثابت -->
     <footer class="pt-2 border-t-2 border-slate-900 text-slate-800 mt-2">
       <div class="grid grid-cols-2 text-center text-[10px]">
-        <!-- معلم المادة ومعد التقرير الثابت: أ. نايف الشومر -->
         <div class="text-right pr-6">
           <p class="text-slate-500 font-semibold" contenteditable="true">المعلم:</p>
           <p class="font-black text-slate-950 text-[11px] mt-0.5" contenteditable="true">نايف الشومر</p>
         </div>
 
-        <!-- مدير المدرسة والاعتماد والختم -->
         <div class="text-left pl-6">
           <p class="text-slate-500 font-semibold" contenteditable="true">مدير المدرسة:</p>
           <p class="font-black text-slate-950 text-[11px] mt-0.5" contenteditable="true">مدير مدرسة الموهوبين العامة بنين</p>
         </div>
       </div>
 
-      <!-- شريط سفلي مصغر وموثق -->
       <div class="mt-2 text-center text-[7.5px] text-slate-400 border-t border-slate-100 pt-1 flex justify-between px-1">
         <span contenteditable="true"><span style="background-color: rgb(255, 255, 255);">&nbsp;</span></span>
       </div>
@@ -505,9 +737,8 @@
 
   </main>
 
-  <!-- ==================== الصفحة الثانية المشروطة (متطابقة تماماً) ==================== -->
+  <!-- ==================== الصفحة الثانية المشروطة ==================== -->
   <main class="a4-page hidden" id="secondPageSheet">
-    <!-- الترويسة الرسمية المتطابقة -->
     <header class="border-b-2 border-emerald-900 pb-2 mb-2">
       <div class="flex items-center justify-between text-right">
         <div class="text-[10px] leading-tight space-y-0.5">
@@ -533,9 +764,7 @@
       </div>
     </header>
 
-    <!-- مساحة الشواهد التوثيقية والامتداد في الصفحة الثانية (مستقلة تماماً وبنفس نسق وهوية الصفحة) -->
     <div id="secondPageCanvas" class="flex-1 flex flex-col justify-start overflow-hidden">
-      <!-- ترويسة داخلية أنيقة لمعرض شواهد الصفحة الثانية مع مؤشر التنسيق -->
       <div class="flex items-center justify-between border-b border-slate-200 pb-1.5 mb-2">
         <h3 class="text-xs font-black text-emerald-950 flex items-center gap-1.5" contenteditable="true">
           <i class="fa-solid fa-photo-film text-emerald-700"></i> معرض شواهد وأدلة التنفيذ الميدانية
@@ -546,7 +775,6 @@
         </div>
       </div>
 
-      <!-- شبكة بطاقات الصور التفاعلية الخاصة بالصفحة الثانية -->
       <div id="page2PhotoGrid" class="flex-1 flex flex-col justify-center items-center">
         <div class="empty-placeholder my-auto flex flex-col items-center justify-center text-slate-400">
           <i class="fa-regular fa-images text-3xl text-slate-300 mb-2"></i>
@@ -558,7 +786,6 @@
       </div>
     </div>
 
-    <!-- تذييل التواقيع والاعتماد المتطابق تماماً -->
     <footer class="pt-2 border-t-2 border-slate-900 text-slate-800 mt-2">
       <div class="grid grid-cols-2 text-center text-[10px]">
         <div class="text-right pr-6">
@@ -578,7 +805,7 @@
   </main>
   </div>
 
-  <!-- ==================== المحرك البرمجي ==================== -->
+  <!-- ==================== المحرك البرمجي المحدث ==================== -->
   <script>
     // عرض رسالة Toast مخصصة
     function showToast(message, isError = false) {
@@ -597,6 +824,55 @@
       setTimeout(() => {
         toast.className = toast.className.replace("show", "");
       }, 2500);
+    }
+
+    // كائن أنماط الصياغة والبرومبات الـ 9 المعتمدة
+    const PROMPT_TONES = {
+      standard: {
+        title: "النمط القياسي (الأصلي)",
+        directive: "الأسلوب المعتمد المتوازن: وازن بتناغم بين السرد الإجرائي وبطاقات المؤشرات الإحصائية العامة."
+      },
+      descriptive: {
+        title: "وصفي / سردي",
+        directive: "الأسلوب الوصفي والنوعي التربوي: صياغة إنشائية سردية متماسكة تركز على الوصف الإجرائي، سلوك الطلاب، ومخرجات النشاط، مع تجنب فرض بطاقات إحصاء أو أرقام مجردة."
+      },
+      statistical: {
+        title: "إحصائي ومؤشرات أداء",
+        directive: "الأسلوب الكمي والإحصائي: ركز على تصدير المؤشرات الرقمية، نسب الإنجاز، أعداد المستفيدين، ومقارنات قياس الأثر والنتائج."
+      },
+      compact: {
+        title: "إجرائي مكثف وموجز",
+        directive: "الأسلوب الإجرائي المكثف: صياغة سريعة بنقاط مباشرة وموجزة توثق جوهر الإنجاز والنشاط الخاطف بأقل عدد من الكلمات."
+      },
+      official_admin: {
+        title: "تقرير نصي رسمي",
+        directive: "الأسلوب الإداري النظامي: صياغة محكمة للمحاضر والاجتماعات واللجان الرسمية بلغة إدارية رصينة ونظامية."
+      },
+      recognition: {
+        title: "تكريم وإنجازات ومسابقات",
+        directive: "أسلوب التكريم والمسابقات: إبراز مسار المنافسة أو المعرض، أسماء الطلاب الموهوبين، ونوع المنتج أو الابتكار الفائز."
+      },
+      initiative: {
+        title: "مبادرة أو فكرة ابتكارية",
+        directive: "هيكل المبادرات النوعية: ركز على 4 ركائز: (المشكلة/الحاجة، الفكرة الابتكارية، آلية التطبيق، والأثر المتوقع)."
+      },
+      field_visit: {
+        title: "زيارة ميدانية وشراكة مجتمعية",
+        directive: "أسلوب الزيارات والشراكات: ركز على الجهة المستضيفة أو الشريكة، أهداف الزيارة، المكتسبات الميدانية، ومخرجات التعاون."
+      },
+      enrichment: {
+        title: "برنامج إثرائي / مهارات تفكير",
+        directive: "أسلوب البرامج الإثرائية: ركز على مهارات التفكير العليا المستهدفة (حل المشكلات، تفكير ناقد، إبداع) والمحاور المنجزة."
+      }
+    };
+
+    let selectedPromptToneKey = "standard";
+
+    function onToneStyleSelected(key) {
+      selectedPromptToneKey = key;
+      const box = document.getElementById("aiPromptBox");
+      box.value = buildPreset(currentPromptMode, selectedImageCount);
+      showToast(`تم تفعيل: ${PROMPT_TONES[key].title} 🎯`);
     }
 
     // نسخ البرومبت بنقرة واحدة
@@ -642,7 +918,7 @@
       showToast("تم تفريغ الورقة واستعادة الحالة النظيفة.");
     }
 
-    // محرك التحديد التفاعلي الحر (Pick & Target Mode) للتحكم بأي جزء بحد ذاته
+    // محرك التحديد التفاعلي الحر (Pick & Target Mode)
     let canvasFontDeltas = { all: 0, headings: 0, body: 0 };
     let canvasBoldStates = { all: false, headings: false, body: false };
     let isPickerActive = false;
@@ -684,7 +960,6 @@
       if (badge) badge.classList.add("hidden");
     }
 
-    // التقاط الجزء المنقور عليه برمجياً داخل مساحة العمل
     document.addEventListener("click", function(e) {
       if (!isPickerActive) return;
       const canvas = document.getElementById("dynamicPageCanvas");
@@ -693,7 +968,6 @@
       e.preventDefault();
       e.stopPropagation();
 
-      // تحديد الحاوية الأنسب للعنصر المنقور عليه (فقرة، صندوق، جدول، أو خلية)
       let target = e.target.closest("table, [class*='card'], [class*='box'], [class*='kpi'], p, h1, h2, h3, h4, h5, h6, ul, ol, div:not(#dynamicPageCanvas)") || e.target;
 
       clearPickedHighlight();
@@ -818,17 +1092,14 @@
       showToast(isBold ? `تم تفعيل الخط العريض لـ (${scopeName})` : `تم إلغاء الخط العريض لـ (${scopeName})`);
     }
 
-    // تطبيق وحقن الكود في مساحة الورقة مع تنفيذ السكريبتات بأمان
+    // تطبيق وحقن الكود في مساحة الورقة
     function applyInjectedCode() {
-      canvasFontDelta = 0;
-      canvasIsBold = false;
       const rawText = document.getElementById("injectedCodeBox").value.trim();
       if (!rawText) {
         showToast("يرجى إدراج الكود في الصندوق أولاً!", true);
         return;
       }
 
-      // تنظيف الكود إذا كان محاطاً بعلامات Markdown
       let cleanCode = rawText;
       if (cleanCode.startsWith("```html")) cleanCode = cleanCode.substring(7);
       else if (cleanCode.startsWith("```")) cleanCode = cleanCode.substring(3);
@@ -836,11 +1107,8 @@
       cleanCode = cleanCode.trim();
 
       const canvas = document.getElementById("dynamicPageCanvas");
-      
-      // تفريغ المحتوى وحقن الكود الجديد
       canvas.innerHTML = cleanCode;
 
-      // التأكد من جعل كل العناصر النصية داخل الكود المحقون قابلة للتعديل إن لم تكن كذلك
       const textElements = canvas.querySelectorAll("p, span, h1, h2, h3, h4, h5, h6, td, th, li, strong");
       textElements.forEach(el => {
         if (!el.hasAttribute("contenteditable")) {
@@ -848,7 +1116,6 @@
         }
       });
 
-      // استخراج وتنفيذ أي سكريبتات مدمجة (مثل سكريبتات تشغيل Chart.js)
       const scripts = canvas.querySelectorAll("script");
       scripts.forEach(oldScript => {
         const newScript = document.createElement("script");
@@ -857,12 +1124,11 @@
         oldScript.parentNode.replaceChild(newScript, oldScript);
       });
 
-      // فحص وإظهار زر رفع الصور فور تطبيق الكود
       checkAndToggleImageUploadButton();
       showToast("تم تطبيق الكود وعكسه على الورقة بنجاح!");
     }
 
-    // إدارة وضبط البرومبت الذكي
+    // إدارة البرومبت الذكي
     let currentPromptMode = 'files';
     let selectedImageCount = 0;
 
@@ -880,17 +1146,18 @@
 
     function buildPreset(mode, imgCount) {
       const imgRule = getImageInstruction(imgCount);
+      const toneDirective = PROMPT_TONES[selectedPromptToneKey].directive;
+
       if (mode === 'files') {
         return `حلل الملفات المرفقة واستخرج بيانات المعيار المطلوب، ثم برمج لي "محتوى داخلي فقط" ليتم حقنه في وسط صفحة A4 مجهزة ومصممة مسبقاً:
+
+توجيه نمط الصياغة المطلوب بدقة:
+[ ${toneDirective} ]
 
 شروط برمجية صارمة جداً لمنع تكرار عناصر الصفحة:
 1. ممنوع نهائياً توليد ترويسة (اسم الوزارة، الإدارة، المدرسة، عنوان التقرير)، وممنوع إضافة اسم المعلم أو المدير أو التواقيع نهائياً لأنها مبنية وموجودة في الصفحة مسبقاً.
 2. لا تضع أي غلاف خارجي أو إطار صفحة (مثل class="a4-page" أو كروت وهوامش تجعلها تبدو كصفحة مستقلة).
-3. الكود الناتج يجب أن يكون عبارة عن عنصر <div> مرن ومباشر يحتوي على:
-   - بطاقات مؤشرات أداء رئيسية (KPIs) أفقية وأنيقة.
-   - وصف موجز للإنجاز والأثر التعليمي.
-   - مصفوفة شواهد أو جدول إحصائي للمقارنة.
-   - رسم بياني تفاعلي عبر Chart.js داخل وسم <canvas> مع سكريبت تشغيله فوراً.
+3. الكود الناتج يجب أن يكون عبارة عن عنصر <div> مرن ومباشر يحتوي على محتوى المعيار المتناسب مع نمط الصياغة المختار.
 4. استخدم خط 'Alyamama' مع Tailwind CSS وألوان التعليم الرسمية (#065f46، الذهبي، والرمادي).
 ${imgRule}
 6. اجعل كافة النصوص والأرقام قابلة للتعديل المباشر (contenteditable="true").
@@ -900,14 +1167,13 @@ ${imgRule}
         return `أريد تصميم وبرمجة "محتوى داخلي فقط" لشاهد إنجاز رسمي للأداء الوظيفي بدون مرفقات، ليتم حقنه في وسط صفحة A4 مجهزة مسبقاً:
 [اكتب هنا موضوع المعيار بالتفصيل، مثلاً: معيار تفعيل منصة تعليمية / خطة رعاية الموهوبين / الفاقد التعليمي / مجتمعات التعلم المهنية...].
 
+توجيه نمط الصياغة المطلوب بدقة:
+[ ${toneDirective} ]
+
 المطلوب برمجته بشروط صارمة تمنع تكرار الصفحة والعناصر:
 1. ممنوع نهائياً توليد ترويسة رسمية أو عنوان عام، وممنوع ذكر اسم المعلم أو المدير أو التواقيع نهائياً لأنها موجودة وثابتة في التقرير.
 2. لا تضع أي إطار ورقة خارجي أو هوامش صفحة مستقلة تجعلها تبدو كصفحة داخل صفحة.
-3. قم ببرمجة <div> متكامل يملأ المساحة المتاحة يحتوي على:
-   - مؤشرات أداء كمية ونوعية وواقعية (بطاقات KPIs) مناسبة للمعيار.
-   - وصف دقيق وموجز للأثر والممارسة التعليمية.
-   - جدول إحصائي رقمي (قبلي/بعدي أو نسب إنجاز).
-   - رسم بياني تفاعلي أو بياني مقارن عبر Chart.js داخل <canvas> وسكريبت تشغيله فوراً.
+3. قم ببرمجة <div> متكامل يملأ المساحة المتاحة متناسباً مع نمط الصياغة المختار.
 4. استخدم خط اليمامة 'Alyamama' مع Tailwind CSS ودرجات الأخضر الرسمي (#065f46، الذهبي، والرمادي).
 ${imgRule}
 6. اجعل جميع النصوص والبيانات الرقمية قابلة للتعديل الفوري عبر (contenteditable="true").
@@ -921,10 +1187,9 @@ ${imgRule}
       selectedImageCount = parseInt(select.value, 10);
       const box = document.getElementById("aiPromptBox");
       box.value = buildPreset(currentPromptMode, selectedImageCount);
-      showToast(`تم تحديث البرومبت ليشمل (${selectedImageCount}) صور بإطارات انسيابية`);
+      showToast(`تم تحديث البرومبت ليشمل (${selectedImageCount}) صور`);
     }
 
-    // فحص وتفعيل شريط التحكم بالصور
     function checkAndToggleImageUploadButton() {
       const canvas = document.getElementById("dynamicPageCanvas");
       const imgElements = canvas.querySelectorAll("img.evidence-img, .evidence-img, [data-evidence-slot], .evidence-card");
@@ -939,16 +1204,11 @@ ${imgRule}
       }
     }
 
-    // دالة تغيير وتعديل حجم الصور العام مباشرة داخل الورقة
     function changeImageSize(size) {
       const canvas = document.getElementById("dynamicPageCanvas");
       const targets = canvas.querySelectorAll("img.evidence-img, .evidence-img, [data-evidence-slot] img, .evidence-card img");
 
-      const heights = {
-        sm: "65px",
-        md: "96px",
-        lg: "140px"
-      };
+      const heights = { sm: "65px", md: "96px", lg: "140px" };
 
       targets.forEach(img => {
         img.style.height = heights[size];
@@ -956,7 +1216,6 @@ ${imgRule}
         img.style.objectFit = "cover";
       });
 
-      // تحديث ألوان أزرار الحجم
       ['sm', 'md', 'lg'].forEach(s => {
         const b = document.getElementById(`sizeBtn_${s}`);
         if (!b) return;
@@ -970,7 +1229,6 @@ ${imgRule}
       showToast(`تم تعديل حجم صور الشواهد إلى (${size === 'sm' ? 'صغير' : size === 'md' ? 'متوسط' : 'كبير'}) بنجاح!`);
     }
 
-    // دالة التحكم بالحجم الكبير جداً (الكل أو مخصص) مع صيانة مكان النصوص
     let targetPageMode = 1;
     let page2SelectedCount = 0;
 
@@ -989,7 +1247,7 @@ ${imgRule}
         btn2.className = "text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-600 text-white transition";
         btn1.className = "text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition";
         initQRCode();
-        showToast("تم تفعيل الصفحة الثانية 📄📄 مع خيارات طريقة العرض");
+        showToast("تم تفعيل الصفحة الثانية 📄📄");
       } else {
         p2.classList.add("hidden");
         if (p2Controls) p2Controls.classList.add("hidden");
@@ -1003,8 +1261,7 @@ ${imgRule}
       checkPageOverflow();
     }
 
-    // إدارة الصفحة الثانية الشاملة (العدد، التنسيق، والتحكم بالزووم الفردي)
-    let p2CurrentLayout = 'grid'; // 'grid' أو 'column'
+    let p2CurrentLayout = 'grid';
 
     function onPage2CountSelected(val) {
       const count = parseInt(val, 10);
@@ -1012,7 +1269,6 @@ ${imgRule}
 
       page2SelectedCount = count;
 
-      // إظهار أزرار اختيار نمط التنسيق وزر الرفع
       const layoutControls = document.getElementById("p2LayoutControls");
       const uploadBtn = document.getElementById("p2UploadBtn");
       const uploadLabel = document.getElementById("p2UploadLabel");
@@ -1026,7 +1282,6 @@ ${imgRule}
       renderPage2ImageSlots(count, p2CurrentLayout);
     }
 
-    // حفظ بيانات صور ونصوص وتخصيصات الصفحة الثانية في الذاكرة الحية لضمان عدم اختفائها أبداً عند تبديل التنسيق
     function capturePage2State() {
       const state = {};
       const grid = document.getElementById("page2PhotoGrid");
@@ -1048,7 +1303,7 @@ ${imgRule}
           objectFit: img ? (img.style.objectFit || "cover") : "cover",
           frameHeight: frame ? frame.style.height : "",
           span: card.style.gridColumn || "",
-          captionText: caption ? caption.innerText : `توثيق الشاهد (${i}) - اضغط للتعديل`
+          captionText: caption ? caption.innerText : `توثيق الشاهد (${i}) - -`
         };
       });
       return state;
@@ -1105,13 +1360,13 @@ ${imgRule}
       if (mode === 'grid') {
         if (btnGrid) btnGrid.className = "text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white transition";
         if (btnCol) btnCol.className = "text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition";
-        if (badge) badge.innerText = "تنسيق عرضي شبكي";
-        showToast("تم تطبيق التنسيق العرضي مع بقاء كامل الصور والنصوص ▤");
+        if (badge) badge.innerText = "-";
+        showToast("تم تطبيق التنسيق العرضي ▤");
       } else {
         if (btnCol) btnCol.className = "text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white transition";
         if (btnGrid) btnGrid.className = "text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition";
         if (badge) badge.innerText = "-";
-        showToast("تم تطبيق التنسيق الطولي مع بقاء كامل الصور والنصوص ▮");
+        showToast("تم تطبيق التنسيق الطولي ▮");
       }
 
       if (page2SelectedCount > 0) {
@@ -1121,11 +1376,8 @@ ${imgRule}
       }
     }
 
-    // إدارة نسق وترتيب الصفحتين (تحت بعض أو بجانب بعض مع تبديل اليمين واليسار)
-    let pagesArrangement = 'vertical'; // 'vertical' أو 'horizontal'
-    let pagesOrderRtl = true; // true: ص1 يمين، false: ص1 يسار
-
-    // محرك الملاءمة التلقائية للشاشة وحساب نسبة العرض بدقة
+    let pagesArrangement = 'vertical';
+    let pagesOrderRtl = true;
     let currentPagesScale = 1;
 
     function applyPagesScale(scaleVal) {
@@ -1133,8 +1385,8 @@ ${imgRule}
       if (!wrapper) return;
 
       if (scaleVal === 'auto') {
-        const availableWidth = window.innerWidth - 60; // استبعاد هوامش المتصفح
-        const targetWidth = 1680; // العرض الطبيعي للورقتين A4 متجاورتين
+        const availableWidth = window.innerWidth - 60;
+        const targetWidth = 1680;
         if (availableWidth < targetWidth) {
           currentPagesScale = Math.max(0.55, Math.min(1, availableWidth / targetWidth));
         } else {
@@ -1144,7 +1396,6 @@ ${imgRule}
         currentPagesScale = parseFloat(scaleVal);
       }
 
-      // تطبيق التحجيم البصري على المعاينة فقط مع ضبط نقطة الارتكاز بالأعلى
       if (pagesArrangement === 'horizontal') {
         wrapper.style.transform = `scale(${currentPagesScale})`;
         wrapper.style.transformOrigin = "top center";
@@ -1152,7 +1403,6 @@ ${imgRule}
         wrapper.style.transform = "none";
       }
 
-      // تحديث ألوان أزرار النسبة
       ['auto', '90', '80', '100'].forEach(key => {
         const btn = document.getElementById(`scaleBtn_${key}`);
         if (!btn) return;
@@ -1170,7 +1420,6 @@ ${imgRule}
       showToast(`مستوى عرض المعاينة: ${Math.round(currentPagesScale * 100)}% 🖥️`);
     }
 
-    // إعادة الضبط التلقائي إذا تم تغيير مقاس نافذة المتصفح
     window.addEventListener("resize", () => {
       if (pagesArrangement === 'horizontal') {
         const autoBtn = document.getElementById("scaleBtn_auto");
@@ -1197,9 +1446,8 @@ ${imgRule}
         if (btnOrder) btnOrder.classList.remove("hidden");
         if (fitGroup) fitGroup.classList.remove("hidden");
 
-        // تطبيق الملاءمة التلقائية فور التحويل للمتجاور
         setTimeout(() => applyPagesScale('auto'), 50);
-        showToast("تم العرض بجانب بعض مع الملاءمة التلقائية لشاشتك ⯇⯈");
+        showToast("تم العرض بجانب بعض ⯇⯈");
       } else {
         wrapper.className = "flex flex-col items-center justify-center gap-0 w-full transition-transform duration-200 origin-top";
         wrapper.style.transform = "none";
@@ -1207,7 +1455,7 @@ ${imgRule}
         if (btnHoriz) btnHoriz.className = "text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white transition";
         if (btnOrder) btnOrder.classList.add("hidden");
         if (fitGroup) fitGroup.classList.add("hidden");
-        showToast("تم ضبط العرض تحت بعضهما عمودياً ⯅⯆");
+        showToast("تم ضبط العرض عمودياً ⯅⯆");
       }
     }
 
@@ -1216,10 +1464,9 @@ ${imgRule}
       const label = document.getElementById("orderSwapLabel");
       if (label) label.textContent = pagesOrderRtl ? "ص1 يمين" : "ص1 يسار";
       setPagesArrangement('horizontal');
-      showToast(pagesOrderRtl ? "ترتيب العرض: الصفحة 1 في اليمين" : "ترتيب العرض: الصفحة 1 في اليسار");
+      showToast(pagesOrderRtl ? "ترتيب: ص1 يمين" : "ترتيب: ص1 يسار");
     }
 
-    // تطبيق التحويل الشامل (تكبير + تدوير) مع الحفاظ على البيانات
     function p2ApplyTransforms(img) {
       if (!img) return;
       const scale = parseFloat(img.dataset.scale || "1");
@@ -1227,7 +1474,6 @@ ${imgRule}
       img.style.transform = `scale(${scale}) rotate(${rotate}deg)`;
     }
 
-    // زووم فردي لكل صورة (Zoom In / Zoom Out)
     function p2AdjustZoom(idx, delta) {
       const img = document.getElementById(`p2_img_${idx}`);
       if (!img) return;
@@ -1238,7 +1484,6 @@ ${imgRule}
       showToast(`مستوى التقريب: ${Math.round(currentScale * 100)}% 🔍`);
     }
 
-    // لف وتدوير الصورة يميناً أو يساراً بزاوية 90 درجة
     function p2Rotate(idx, deg) {
       const img = document.getElementById(`p2_img_${idx}`);
       if (!img) return;
@@ -1249,7 +1494,6 @@ ${imgRule}
       showToast(`زاوية التدوير: ${currentRotate}° 🔄`);
     }
 
-    // مضاعفة عرض البطاقة الفردية لتأخذ خانتين في الشبكة
     function p2ToggleSpan(idx) {
       const img = document.getElementById(`p2_img_${idx}`);
       if (!img) return;
@@ -1265,7 +1509,6 @@ ${imgRule}
       checkPageOverflow();
     }
 
-    // تبديل احتواء الصورة (Fit / Fill)
     function p2ToggleFit(idx) {
       const img = document.getElementById(`p2_img_${idx}`);
       if (!img) return;
@@ -1278,7 +1521,6 @@ ${imgRule}
       }
     }
 
-    // بناء شبكة الشواهد بمرونة فائقة بين الطولي والعرضي دون كسر حدود A4
     function renderPage2ImageSlots(count, layout) {
       const grid = document.getElementById("page2PhotoGrid");
       if (!grid) return;
@@ -1287,7 +1529,6 @@ ${imgRule}
       let imgHeightClass = "h-36";
 
       if (layout === 'column') {
-        // توزيع طولي انسيابي في عمود واحد متناسق يملأ الصفحة
         layoutClass = "grid grid-cols-1 gap-2 flex-1 items-stretch";
         if (count === 1) imgHeightClass = "h-[480px]";
         else if (count === 2) imgHeightClass = "h-56";
@@ -1296,7 +1537,6 @@ ${imgRule}
         else if (count <= 6) imgHeightClass = "h-24";
         else imgHeightClass = "h-20";
       } else {
-        // توزيع عرضي وشبكي هندسي ذكي
         if (count === 1) {
           layoutClass = "grid grid-cols-1 gap-2 flex-1 items-stretch";
           imgHeightClass = "h-[450px]";
@@ -1313,7 +1553,6 @@ ${imgRule}
           layoutClass = "grid grid-cols-3 gap-2 flex-1 items-stretch";
           imgHeightClass = "h-36";
         } else {
-          // 7 و 8 صور (ممتلئة بالصفحة عبر 4 أعمدة وصفين)
           layoutClass = "grid grid-cols-4 gap-1.5 flex-1 items-stretch";
           imgHeightClass = "h-32";
         }
@@ -1325,34 +1564,47 @@ ${imgRule}
       for (let i = 1; i <= count; i++) {
         html += `
           <div class="evidence-card bg-slate-50 border border-slate-200/90 rounded-xl p-1.5 flex flex-col justify-between shadow-xs transition hover:border-emerald-500">
-            <!-- حاوية الصورة مع أزرار التحكم بالزووم والموضع -->
             <div class="w-full ${imgHeightClass} bg-white rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center relative group">
               <img id="p2_img_${i}" class="evidence-img w-full h-full object-cover rounded-lg hidden transition-transform duration-150 origin-center" alt="شاهد توثيقي ${i}" data-scale="1" data-pos-x="50" data-pos-y="50">
               
-              <!-- مؤشر الفراغ -->
               <div id="p2_ph_${i}" class="flex flex-col items-center justify-center text-slate-400 p-2 text-center pointer-events-none">
                 <i class="fa-regular fa-image text-2xl text-slate-300 mb-1"></i>
                 <span class="text-[9px] font-bold text-slate-400">شاهد (${i})</span>
               </div>
 
-              <!-- شريط تحكم شامل لكل بطاقة: تكبير وتصغير الإطار، زووم، تدوير مصحح، توسيع خانة، وتعبئة الفراغ -->
               <div class="no-print absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-slate-900/95 backdrop-blur-xs p-1 rounded-lg shadow-lg z-10 flex-wrap max-w-[95%]">
-                <button type="button" onclick="p2AdjustFrameHeight(${i}, 35)" class="text-white hover:text-emerald-400 text-[9px] px-1 font-bold" title="زيادة ارتفاع الإطار لملء الفراغ"><i class="fa-solid fa-arrows-up-down"></i> +</button>
+                <button type="button" onclick="p2AdjustFrameHeight(${i}, 35)" class="text-white hover:text-emerald-400 text-[9px] px-1 font-bold" title="زيادة ارتفاع الإطار"><i class="fa-solid fa-arrows-up-down"></i> +</button>
                 <button type="button" onclick="p2AdjustFrameHeight(${i}, -35)" class="text-white hover:text-rose-400 text-[9px] px-1 font-bold" title="تقليص ارتفاع الإطار"><i class="fa-solid fa-arrows-up-down"></i> -</button>
                 <span class="w-[1px] h-3 bg-slate-700"></span>
-                <button type="button" onclick="p2AdjustZoom(${i}, 0.15)" class="text-white hover:text-emerald-300 text-[9px] px-1" title="تكبير الصورة (Zoom In)"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
-                <button type="button" onclick="p2AdjustZoom(${i}, -0.15)" class="text-white hover:text-amber-300 text-[9px] px-1" title="تصغير الصورة (Zoom Out)"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                <button type="button" onclick="p2AdjustZoom(${i}, 0.15)" class="text-white hover:text-emerald-300 text-[9px] px-1" title="تكبير الصورة"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                <button type="button" onclick="p2AdjustZoom(${i}, -0.15)" class="text-white hover:text-amber-300 text-[9px] px-1" title="تصغير الصورة"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
                 <span class="w-[1px] h-3 bg-slate-700"></span>
                 <button type="button" onclick="p2Rotate(${i}, -90)" class="text-white hover:text-cyan-300 text-[9px] px-1" title="لف لليسار 90°"><i class="fa-solid fa-rotate-left"></i></button>
                 <button type="button" onclick="p2Rotate(${i}, 90)" class="text-white hover:text-cyan-300 text-[9px] px-1" title="لف لليمين 90°"><i class="fa-solid fa-rotate-right"></i></button>
                 <span class="w-[1px] h-3 bg-slate-700"></span>
+                <button type="button" onclick="toggleTouchPad(${i})" class="text-emerald-300 hover:text-emerald-200 text-[9px] px-1 font-bold" title="تحريك الصورة بالأسهم"><i class="fa-solid fa-up-down-left-right"></i> أسهم</button>
                 <button type="button" onclick="p2ToggleSpan(${i})" class="text-white hover:text-yellow-300 text-[8.5px] px-1 font-bold" title="مضاعفة العرض لخانتين">عرض ⇥</button>
-                <button type="button" onclick="p2ToggleFit(${i})" class="text-white hover:text-sky-300 text-[8px] px-1 font-bold" title="تبديل ملء كامل الإطار (Cover / Contain)">ملاءمة</button>
+                <button type="button" onclick="p2ToggleFit(${i})" class="text-white hover:text-sky-300 text-[8px] px-1 font-bold" title="تبديل الملء">ملاءمة</button>
+              </div>
+
+              <div id="touchPad_${i}" class="hidden no-print absolute bottom-2 left-2 z-20 bg-slate-950/90 border border-emerald-500/80 rounded-xl p-1.5 shadow-2xl flex flex-col items-center gap-1 backdrop-blur-md">
+                <div class="flex items-center justify-between w-full px-1 border-b border-slate-700 pb-0.5">
+                  <span class="text-[8px] font-bold text-emerald-400">ضبط الموضع 🎯</span>
+                  <button type="button" onclick="toggleTouchPad(${i})" class="text-slate-400 hover:text-rose-400 text-[9px] font-bold px-1">✕</button>
+                </div>
+                <div class="flex flex-col items-center gap-1 mt-0.5">
+                  <button type="button" onclick="p2NudgeImage(${i}, 0, -6)" class="w-6 h-5 bg-slate-800 hover:bg-emerald-600 active:scale-95 text-white rounded text-[10px] font-bold shadow flex items-center justify-center">▲</button>
+                  <div class="flex items-center gap-1">
+                    <button type="button" onclick="p2NudgeImage(${i}, 6, 0)" class="w-6 h-5 bg-slate-800 hover:bg-emerald-600 active:scale-95 text-white rounded text-[10px] font-bold shadow flex items-center justify-center">►</button>
+                    <button type="button" onclick="p2ResetPosition(${i})" class="px-1 h-5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-[7.5px] font-bold flex items-center justify-center">توسيط</button>
+                    <button type="button" onclick="p2NudgeImage(${i}, -6, 0)" class="w-6 h-5 bg-slate-800 hover:bg-emerald-600 active:scale-95 text-white rounded text-[10px] font-bold shadow flex items-center justify-center">◄</button>
+                  </div>
+                  <button type="button" onclick="p2NudgeImage(${i}, 0, 6)" class="w-6 h-5 bg-slate-800 hover:bg-emerald-600 active:scale-95 text-white rounded text-[10px] font-bold shadow flex items-center justify-center">▼</button>
+                </div>
               </div>
             </div>
 
-            <!-- شريط الوصف النصي المستقر بأسفل البطاقة دون ترك أي فراغ ميت -->
-            <div class="evidence-caption text-[10px] font-bold text-slate-800 text-center mt-1.5 py-1 px-1.5 bg-white border border-slate-200 rounded-md cursor-text select-text focus:bg-amber-50 focus:border-amber-400 focus:outline-none transition-colors shrink-0" contenteditable="true" tabindex="0" onclick="if(this.innerText.includes('اضغط للتعديل')){ this.innerText=''; } this.focus();">توثيق الشاهد (${i}) - اضغط للتعديل</div>
+            <div class="evidence-caption text-[10px] font-bold text-slate-800 text-center mt-1.5 py-1 px-1.5 bg-white border border-slate-200 rounded-md cursor-text select-text focus:bg-amber-50 focus:border-amber-400 focus:outline-none transition-colors shrink-0" contenteditable="true" tabindex="0" onclick="if(this.innerText.includes('اضغط للتعديل')){ this.innerText=''; } this.focus();">توثيق الشاهد (${i}) - -</div>
           </div>
         `;
       }
@@ -1364,30 +1616,29 @@ ${imgRule}
       if (input) input.click();
     }
 
-    function handlePage2ImageUpload(event) {
+    async function handlePage2ImageUpload(event) {
       const files = Array.from(event.target.files || []);
       if (!files.length) return;
 
       const count = page2SelectedCount || 4;
       const limit = Math.min(files.length, count);
 
-      files.slice(0, limit).forEach((file, idx) => {
-        const reader = new FileReader();
+      for (let idx = 0; idx < limit; idx++) {
+        const file = files[idx];
         const slotIdx = idx + 1;
-        reader.onload = (e) => {
-          const imgEl = document.getElementById(`p2_img_${slotIdx}`);
-          const phEl = document.getElementById(`p2_ph_${slotIdx}`);
-          if (imgEl) {
-            imgEl.src = e.target.result;
-            imgEl.classList.remove("hidden");
-            imgEl.style.display = "block";
-            if (phEl) phEl.classList.add("hidden");
-          }
-        };
-        reader.readAsDataURL(file);
-      });
+        const base64Data = await convertFileToImageDataUrl(file);
 
-      showToast(`تم تثبيت (${limit}) صور في الصفحة الثانية بنجاح! ✓`);
+        const imgEl = document.getElementById(`p2_img_${slotIdx}`);
+        const phEl = document.getElementById(`p2_ph_${slotIdx}`);
+        if (imgEl) {
+          imgEl.src = base64Data;
+          imgEl.classList.remove("hidden");
+          imgEl.style.display = "block";
+          if (phEl) phEl.classList.add("hidden");
+        }
+      }
+
+      showToast(`تم تثبيت (${limit}) شواهد في الصفحة الثانية بنجاح! ✓`);
       event.target.value = "";
     }
 
@@ -1450,7 +1701,7 @@ ${imgRule}
             targetImg.style.display = "block";
             targetImg.classList.remove("hidden");
             targetImg.style.objectFit = "cover";
-            showToast("تم لصق الصورة من الحافظة مباشرة بنجاح! 📋✨");
+            showToast("تم لصق الصورة بنجاح! 📋✨");
             checkPageOverflow();
           }
         };
@@ -1458,7 +1709,7 @@ ${imgRule}
       });
     }
 
-    let currentQrLink = "https://moe.gov.sa";
+    let currentQrLink = "[https://moe.gov.sa](https://moe.gov.sa)";
     function initQRCode() {
       const b1 = document.getElementById("qrcodeBox");
       const b2 = document.getElementById("qrcodeBox2");
@@ -1477,7 +1728,7 @@ ${imgRule}
       if (url) {
         currentQrLink = url;
         initQRCode();
-        showToast("تم تحديث رمز الاستجابة السريعة (QR Code) بنجاح!");
+        showToast("تم تحديث الباركود بنجاح!");
       }
     }
 
@@ -1504,7 +1755,6 @@ ${imgRule}
       }
     }
 
-    // إدارة سحب موضع الصورة بالفأرة (Drag to Reposition)
     let isDraggingImg = false;
     let dragStartX = 0;
     let dragStartY = 0;
@@ -1520,7 +1770,6 @@ ${imgRule}
       }
     }
 
-    // تعديل ارتفاع إطار الصورة الفردي لملء أي فراغ أبيض
     function p2AdjustFrameHeight(idx, delta) {
       const img = document.getElementById(`p2_img_${idx}`);
       if (!img) return;
@@ -1536,7 +1785,184 @@ ${imgRule}
       showToast(`تم ضبط ارتفاع الإطار: ${newHeight}px 📐`);
     }
 
-    // حركة سحب وتمركز متطابقة هندسياً وحسابياً مع زاوية التدوير
+    // ==================== محرك شريط أدوات معالجة الشواهد وتفاعل التغبيش ====================
+    let activeEvidenceTarget = null;
+    const floatingToolbar = document.getElementById("evidenceFloatingToolbar");
+
+    document.addEventListener("click", function(e) {
+      // التحقق من النقر على الصورة أو على طبقة التغبيش/العدسة نفسها لمنع اختفاء الشريط
+      const clickedOverlay = e.target.closest(".interactive-overlay-item");
+      const imgTarget = clickedOverlay 
+        ? clickedOverlay.parentElement.querySelector("img") 
+        : e.target.closest("img.evidence-img, .evidence-card img, [data-evidence-slot] img, .evidence-img");
+      
+      if (imgTarget) {
+        activeEvidenceTarget = imgTarget;
+        const rect = imgTarget.getBoundingClientRect();
+        
+        floatingToolbar.style.display = "flex";
+        
+        let topPos = window.scrollY + rect.top - 44;
+        if (rect.top < 50) topPos = window.scrollY + rect.bottom + 8;
+        
+        let leftPos = window.scrollX + rect.left + (rect.width / 2) - (floatingToolbar.offsetWidth / 2);
+        leftPos = Math.max(10, Math.min(window.innerWidth - floatingToolbar.offsetWidth - 10, leftPos));
+
+        floatingToolbar.style.top = `${topPos}px`;
+        floatingToolbar.style.left = `${leftPos}px`;
+      } else if (!e.target.closest("#evidenceFloatingToolbar") && !e.target.closest(".overlay-del-btn") && !e.target.closest(".overlay-resize-handle")) {
+        floatingToolbar.style.display = "none";
+      }
+    });
+
+    function handleToolbarAction(action) {
+      if (!activeEvidenceTarget) return;
+      const img = activeEvidenceTarget;
+      const card = img.closest(".evidence-card, [data-evidence-slot], div:has(> img)");
+
+      switch (action) {
+        case 'scanner':
+          img.classList.toggle('filter-scanner');
+          img.classList.remove('filter-sharpen');
+          showToast("تم تطبيق نمط المستند (سكانر) 📄");
+          break;
+
+        case 'sharpen':
+          img.classList.toggle('filter-sharpen');
+          img.classList.remove('filter-scanner');
+          showToast("تم شحذ وتغميق النصوص والأختام ✒️");
+          break;
+
+        case 'border':
+          img.classList.toggle('official-border');
+          showToast("تم تبديل الإطار الرسمي للشاهد 🔲");
+          break;
+
+        case 'fit':
+          if (img.style.objectFit === "contain") {
+            img.style.objectFit = "cover";
+            showToast("ملاءمة الشاهد: ملء الإطار (Cover)");
+          } else {
+            img.style.objectFit = "contain";
+            showToast("ملاءمة الشاهد: كامل الصورة (Fit)");
+          }
+          break;
+
+        case 'blur':
+          spawnInteractiveOverlay(img, 'blur');
+          break;
+
+        case 'spotlight':
+          spawnInteractiveOverlay(img, 'spotlight');
+          break;
+
+        case 'reset':
+          img.classList.remove('filter-scanner', 'filter-sharpen', 'official-border');
+          img.style.objectFit = 'cover';
+          if (card) {
+            const overlays = card.querySelectorAll('.interactive-overlay-item, .evidence-canvas-overlay');
+            overlays.forEach(o => o.remove());
+          }
+          showToast("تمت استعادة حالة الصورة الأصلية وإلغاء التأثيرات 🔄");
+          break;
+      }
+    }
+
+    // توليد عنصر تغبيش أو عدسة تفاعلي قابل للسحب والتحجيم والحذف
+    function spawnInteractiveOverlay(img, mode) {
+      const container = img.parentElement;
+      if (!container) return;
+
+      container.style.position = 'relative';
+
+      const overlay = document.createElement('div');
+      overlay.className = `interactive-overlay-item ${mode === 'blur' ? 'interactive-blur' : 'interactive-spotlight'}`;
+      
+      const size = Math.round(Math.min(container.clientWidth, container.clientHeight) * 0.38) || 60;
+      overlay.style.width = `${size}px`;
+      overlay.style.height = `${size}px`;
+      overlay.style.left = `${(container.clientWidth - size) / 2}px`;
+      overlay.style.top = `${(container.clientHeight - size) / 2}px`;
+
+      // زر الحذف
+      const delBtn = document.createElement('div');
+      delBtn.className = 'overlay-del-btn no-print';
+      delBtn.innerText = '✕';
+      delBtn.title = 'حذف';
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        overlay.remove();
+        showToast("تم حذف التأثير");
+      };
+      overlay.appendChild(delBtn);
+
+      // مقبض تصغير وتكبير القطر
+      const resizeHandle = document.createElement('div');
+      resizeHandle.className = 'overlay-resize-handle no-print';
+      resizeHandle.title = 'اسحب لتغيير الحجم';
+      overlay.appendChild(resizeHandle);
+
+      container.appendChild(overlay);
+
+      // منطق سحب وتحريك العنصر
+      let isDragging = false;
+      let startX, startY, startLeft, startTop;
+
+      overlay.addEventListener('mousedown', function(e) {
+        if (e.target === resizeHandle || e.target === delBtn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startLeft = overlay.offsetLeft;
+        startTop = overlay.offsetTop;
+
+        function onMouseMove(ev) {
+          if (!isDragging) return;
+          const dx = ev.clientX - startX;
+          const dy = ev.clientY - startY;
+          overlay.style.left = `${startLeft + dx}px`;
+          overlay.style.top = `${startTop + dy}px`;
+        }
+
+        function onMouseUp() {
+          isDragging = false;
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+        }
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      });
+
+      // منطق تكبير وتصغير القطر
+      resizeHandle.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const initialSize = overlay.offsetWidth;
+        const initialX = e.clientX;
+
+        function onResizeMove(ev) {
+          const delta = initialX - ev.clientX;
+          const newSize = Math.max(30, Math.min(300, initialSize + delta));
+          overlay.style.width = `${newSize}px`;
+          overlay.style.height = `${newSize}px`;
+        }
+
+        function onResizeUp() {
+          window.removeEventListener('mousemove', onResizeMove);
+          window.removeEventListener('mouseup', onResizeUp);
+        }
+
+        window.addEventListener('mousemove', onResizeMove);
+        window.addEventListener('mouseup', onResizeUp);
+      });
+
+      showToast(mode === 'blur' ? "تمت إضافة دائرة التغبيش! اسحبها لتحديد الموضع 🎭" : "تمت إضافة عدسة التركيز! اسحبها للموضع المطلوب 🔍");
+    }
+
+    // حركة سحب وتمركز متطابقة مع زاوية التدوير
     document.addEventListener("mousedown", function(e) {
       const targetImg = e.target.closest("img.evidence-img, .evidence-card img, [data-evidence-slot] img");
       if (!targetImg) return;
@@ -1569,7 +1995,6 @@ ${imgRule}
       
       const speedFactor = 0.35 / Math.max(1, scale * 0.7);
 
-      // تصحيح متجهات السحب وفق زاوية التدوير لمنع انعكاس المحاور
       let rotX = deltaX;
       let rotY = deltaY;
 
@@ -1599,43 +2024,175 @@ ${imgRule}
       }
     });
 
-    // تصدير PNG فائق النقاء: عزل مؤقت للتحجيم لمنع تداخل الحروف مع مسافات كتابية متقاربة وأنيقة
+    // إعادة ربط أحداث السحب وتغيير المقاس والحذف لأي عنصر تغبيش أو عدسة عند فتح الصفحة المحفوظة
+    function bindOverlayEvents(overlay) {
+      if (!overlay || overlay.dataset.eventsBound === "true") return;
+      overlay.dataset.eventsBound = "true";
+
+      const delBtn = overlay.querySelector('.overlay-del-btn');
+      if (delBtn) {
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          overlay.remove();
+          showToast("تم حذف التأثير");
+        };
+      }
+
+      const resizeHandle = overlay.querySelector('.overlay-resize-handle');
+
+      // منطق تحريك وسحب التأثير بالفأرة
+      let isDragging = false;
+      let startX, startY, startLeft, startTop;
+
+      overlay.addEventListener('mousedown', function(e) {
+        if (e.target === resizeHandle || e.target === delBtn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startLeft = overlay.offsetLeft;
+        startTop = overlay.offsetTop;
+
+        function onMouseMove(ev) {
+          if (!isDragging) return;
+          const dx = ev.clientX - startX;
+          const dy = ev.clientY - startY;
+          overlay.style.left = `${startLeft + dx}px`;
+          overlay.style.top = `${startTop + dy}px`;
+        }
+
+        function onMouseUp() {
+          isDragging = false;
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+        }
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      });
+
+      // منطق تكبير وتصغير القطر
+      if (resizeHandle) {
+        resizeHandle.addEventListener('mousedown', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const initialSize = overlay.offsetWidth;
+          const initialX = e.clientX;
+
+          function onResizeMove(ev) {
+            const delta = initialX - ev.clientX;
+            const newSize = Math.max(25, Math.min(350, initialSize + delta));
+            overlay.style.width = `${newSize}px`;
+            overlay.style.height = `${newSize}px`;
+          }
+
+          function onResizeUp() {
+            window.removeEventListener('mousemove', onResizeMove);
+            window.removeEventListener('mouseup', onResizeUp);
+          }
+
+          window.addEventListener('mousemove', onResizeMove);
+          window.addEventListener('mouseup', onResizeUp);
+        });
+      }
+    }
+
+    // إحياء كافة الدوائر والتأثيرات المحفوظة مسبقاً في ملف الـ HTML
+    function rebindAllSavedOverlays() {
+      const items = document.querySelectorAll('.interactive-overlay-item');
+      items.forEach(el => bindOverlayEvents(el));
+    }
+
+    // تصدير دقيق بدون عصر الصور مع إخفاء أزرار التحكم وحفظ التناسب الهندسي
     async function exportDirectPNG() {
-      showToast("جاري معالجة وتصدير الصورة لكامل الوثيقة بدقة نقية...");
+      showToast("جاري معالجة وتصدير الصورة لكامل الوثيقة بأعلى دقة ونقاء...");
       const p1 = document.getElementById("printableSheet");
       const p2 = document.getElementById("secondPageSheet");
       const wrapper = document.getElementById("pagesWrapper");
       const isTwoPages = targetPageMode === 2 && p2 && !p2.classList.contains("hidden");
 
-      // تجميد مؤقت لأي تأثيرات تحجيم بصري (Scale) قبل الالتقاط لمنع تداخل وتشوه الخطوط
+      // 1. إخفاء أزرار الحذف ومقابض التحجيم أثناء الالتقاط فقط
+      const uiControls = document.querySelectorAll('.overlay-del-btn, .overlay-resize-handle, #evidenceFloatingToolbar');
+      uiControls.forEach(el => el.style.setProperty('display', 'none', 'important'));
+
       const originalTransform = wrapper ? wrapper.style.transform : "";
       if (wrapper) wrapper.style.transform = "none";
 
+      // 2. حل مشكلة عصر الصور: تحويل مؤقت لمنع html2canvas من مط أو ضغط الشواهد عمودياً
+      const allEvidenceImgs = document.querySelectorAll("img.evidence-img, .evidence-card img, [data-evidence-slot] img");
+      const savedStyles = [];
+      allEvidenceImgs.forEach((img, idx) => {
+        savedStyles[idx] = {
+          width: img.style.width,
+          height: img.style.height,
+          objectFit: img.style.objectFit,
+          display: img.style.display,
+          parentBg: img.parentElement.style.backgroundImage,
+          parentBgSize: img.parentElement.style.backgroundSize,
+          parentBgPos: img.parentElement.style.backgroundPosition,
+          parentBgRepeat: img.parentElement.style.backgroundRepeat
+        };
+
+        if (img.src && !img.classList.contains('hidden')) {
+          const parent = img.parentElement;
+          parent.style.backgroundImage = `url("${img.src}")`;
+          parent.style.backgroundSize = img.style.objectFit === 'contain' ? 'contain' : 'cover';
+          parent.style.backgroundPosition = img.style.objectPosition || 'center center';
+          parent.style.backgroundRepeat = 'no-repeat';
+          img.style.setProperty('opacity', '0', 'important');
+        }
+      });
+
       try {
-        if (!isTwoPages) {
-          const canvas = await html2canvas(p1, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+        const renderOpts = {
+          scale: 2.5,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false
+        };
+
+        const restoreOriginalStyles = () => {
           if (wrapper) wrapper.style.transform = originalTransform;
+          uiControls.forEach(el => el.style.removeProperty('display'));
+          allEvidenceImgs.forEach((img, idx) => {
+            const s = savedStyles[idx];
+            if (s) {
+              img.style.width = s.width;
+              img.style.height = s.height;
+              img.style.objectFit = s.objectFit;
+              img.style.display = s.display;
+              img.style.removeProperty('opacity');
+              const parent = img.parentElement;
+              parent.style.backgroundImage = s.parentBg;
+              parent.style.backgroundSize = s.parentBgSize;
+              parent.style.backgroundPosition = s.parentBgPos;
+              parent.style.backgroundRepeat = s.parentBgRepeat;
+            }
+          });
+        };
+
+        if (!isTwoPages) {
+          const canvas = await html2canvas(p1, renderOpts);
+          restoreOriginalStyles();
           
           const link = document.createElement('a');
           link.download = 'تقرير_شاهد_الأداء_الوظيفي.png';
           link.href = canvas.toDataURL("image/png");
           link.click();
-          showToast("تم تصدير الصفحة بدقة نقية بنجاح! 🖼️✓");
+          showToast("تم تصدير الصفحة بدقة نقية وبدون عصر أو شوائب! 🖼️✓");
           return;
         }
 
-        // التقاط الصفحتين كعناصر منفصلة وبأعلى دقة نقاء
-        const canvas1 = await html2canvas(p1, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
-        const canvas2 = await html2canvas(p2, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+        const canvas1 = await html2canvas(p1, renderOpts);
+        const canvas2 = await html2canvas(p2, renderOpts);
 
-        // إعادة حالة العرض للشاشة فور انتهاء الالتقاط
-        if (wrapper) wrapper.style.transform = originalTransform;
+        restoreOriginalStyles();
 
         const mergedCanvas = document.createElement("canvas");
         const ctx = mergedCanvas.getContext("2d");
 
         if (pagesArrangement === 'horizontal') {
-          // فاصل كتابي متقارب وأنيق (16 بكسل فقط) لمنع التداخل مع الحفاظ على القرب
           const gap = 16;
           mergedCanvas.width = canvas1.width + canvas2.width + gap;
           mergedCanvas.height = Math.max(canvas1.height, canvas2.height);
@@ -1644,16 +2201,13 @@ ${imgRule}
           ctx.fillRect(0, 0, mergedCanvas.width, mergedCanvas.height);
 
           if (pagesOrderRtl) {
-            // ص1 يمين ثم ص2 يسار (متقاربتان بنسق المجلة أو الكتاب)
             ctx.drawImage(canvas1, canvas2.width + gap, 0);
             ctx.drawImage(canvas2, 0, 0);
           } else {
-            // ص1 يسار ثم ص2 يمين
             ctx.drawImage(canvas1, 0, 0);
             ctx.drawImage(canvas2, canvas1.width + gap, 0);
           }
         } else {
-          // دمج رأسي متناسق تحت بعضهما
           const gap = 20;
           mergedCanvas.width = Math.max(canvas1.width, canvas2.width);
           mergedCanvas.height = canvas1.height + canvas2.height + gap;
@@ -1669,10 +2223,22 @@ ${imgRule}
         link.download = 'تقرير_شاهد_الأداء_الوظيفي_صفحتان.png';
         link.href = mergedCanvas.toDataURL("image/png");
         link.click();
-        showToast("تم تصدير الصفحتين متقاربتين وبدون أي تداخل في النصوص! 🖼️✨");
+        showToast("تم تصدير الصفحتين بنقاء كامل وتناسب هندسي سليم! 🖼️✨");
 
       } catch (err) {
         if (wrapper) wrapper.style.transform = originalTransform;
+        uiControls.forEach(el => el.style.removeProperty('display'));
+        allEvidenceImgs.forEach((img, idx) => {
+          const s = savedStyles[idx];
+          if (s) {
+            img.style.removeProperty('opacity');
+            const parent = img.parentElement;
+            parent.style.backgroundImage = s.parentBg;
+            parent.style.backgroundSize = s.parentBgSize;
+            parent.style.backgroundPosition = s.parentBgPos;
+            parent.style.backgroundRepeat = s.parentBgRepeat;
+          }
+        });
         console.error(err);
         showToast("حدث خطأ أثناء تصدير الصورة", true);
       }
@@ -1682,6 +2248,8 @@ ${imgRule}
       initQRCode();
       setupPasteSupport();
       setInterval(checkPageOverflow, 1200);
+      switchPromptMode('files');
+      rebindAllSavedOverlays();
     });
 
     function setExtraLargeImages(mode) {
@@ -1739,24 +2307,83 @@ ${imgRule}
           selectedImg.style.objectFit = "cover";
         }
 
-        showToast(`تم جعل الصورة رقم (${idx + 1}) كبيرة جداً بحجم مضاعف! ⭐`);
+        showToast(`تم جعل الصورة رقم (${idx + 1}) كبيرة جداً! ⭐`);
       }
       checkPageOverflow();
+    }
+
+    async function convertFileToImageDataUrl(file) {
+      if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+        showToast("جاري معالجة وتصيير ملف الـ PDF كصورة... 📄");
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 2.0 });
+
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+        return canvas.toDataURL("image/png");
+      } else {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(file);
+        });
+      }
+    }
+
+    function toggleTouchPad(idx) {
+      const pad = document.getElementById(`touchPad_${idx}`);
+      if (pad) pad.classList.toggle("hidden");
+    }
+
+    function p2NudgeImage(idx, deltaX, deltaY) {
+      const img = document.getElementById(`p2_img_${idx}`);
+      if (!img) return;
+
+      const rotate = ((parseInt(img.dataset.rotate || "0", 10) % 360) + 360) % 360;
+      let rotX = deltaX;
+      let rotY = deltaY;
+
+      if (rotate === 90) { rotX = deltaY; rotY = -deltaX; }
+      else if (rotate === 180) { rotX = -deltaX; rotY = -deltaY; }
+      else if (rotate === 270) { rotX = -deltaY; rotY = deltaX; }
+
+      let curX = parseFloat(img.dataset.posX || "50");
+      let curY = parseFloat(img.dataset.posY || "50");
+
+      curX = Math.max(0, Math.min(100, curX + rotX));
+      curY = Math.max(0, Math.min(100, curY + rotY));
+
+      img.dataset.posX = curX;
+      img.dataset.posY = curY;
+      img.style.objectPosition = `${curX}% ${curY}%`;
+    }
+
+    function p2ResetPosition(idx) {
+      const img = document.getElementById(`p2_img_${idx}`);
+      if (!img) return;
+      img.dataset.posX = "50";
+      img.dataset.posY = "50";
+      img.style.objectPosition = "50% 50%";
+      showToast("تمت إعادة الصورة للمنتصف بنجاح 🎯");
     }
 
     function triggerImageUpload() {
       document.getElementById("batchImageInput").click();
     }
 
-    function handleImageSelection(event) {
+    async function handleImageSelection(event) {
       const files = Array.from(event.target.files || []);
       if (!files.length) return;
 
       const canvas = document.getElementById("dynamicPageCanvas");
-      // البحث عن كل الصور أو الحاويات المخصصة للشواهد
       let targetElements = canvas.querySelectorAll("img.evidence-img, .evidence-img img, img, .evidence-placeholder");
 
-      // إذا لم يجد وسوم صور جاهزة، يبحث عن كروت وحاويات الصور
       if (targetElements.length === 0) {
         targetElements = canvas.querySelectorAll("[data-evidence-slot], .evidence-card, .evidence-slot");
       }
@@ -1769,46 +2396,36 @@ ${imgRule}
       const maxCount = Math.min(files.length, targetElements.length);
       let loadedCount = 0;
 
-      files.slice(0, maxCount).forEach((file, index) => {
-        const reader = new FileReader();
+      for (let index = 0; index < maxCount; index++) {
+        const file = files[index];
         const slot = targetElements[index];
+        const base64Data = await convertFileToImageDataUrl(file);
 
-        reader.onload = (e) => {
-          const base64Data = e.target.result;
-
-          if (slot.tagName.toLowerCase() === 'img') {
-            slot.src = base64Data;
-            slot.style.display = "block";
-            slot.classList.remove("hidden");
-            slot.style.objectFit = "cover";
-          } else {
-            // الحفاظ على الحاوية وإزالة عبارة إرفاق الصورة تلقائياً
-            let existingImg = slot.querySelector("img");
-            if (!existingImg) {
-              existingImg = document.createElement("img");
-              existingImg.className = "evidence-img w-full h-24 object-cover rounded-lg shadow-sm mb-1";
-              slot.insertBefore(existingImg, slot.firstChild);
-            }
-            existingImg.src = base64Data;
-            existingImg.style.display = "block";
-            existingImg.classList.remove("hidden");
-
-            // تفريغ النص التوجيهي عند إرفاق الصورة
-            const captionEl = slot.querySelector('.evidence-caption, [contenteditable="true"]');
-            if (captionEl && /إرفاق الصورة|ارفق الصورة/i.test(captionEl.innerText)) {
-              captionEl.innerText = '';
-            }
+        if (slot.tagName.toLowerCase() === 'img') {
+          slot.src = base64Data;
+          slot.style.display = "block";
+          slot.classList.remove("hidden");
+          slot.style.objectFit = "cover";
+        } else {
+          let existingImg = slot.querySelector("img");
+          if (!existingImg) {
+            existingImg = document.createElement("img");
+            existingImg.className = "evidence-img w-full h-24 object-cover rounded-lg shadow-sm mb-1";
+            slot.insertBefore(existingImg, slot.firstChild);
           }
+          existingImg.src = base64Data;
+          existingImg.style.display = "block";
+          existingImg.classList.remove("hidden");
 
-          loadedCount++;
-          if (loadedCount === maxCount) {
-            showToast(`تم إظهار وتثبيت ${loadedCount} صورة بنجاح! ✓`);
+          const captionEl = slot.querySelector('.evidence-caption, [contenteditable="true"]');
+          if (captionEl && /إرفاق الصورة|ارفق الصورة/i.test(captionEl.innerText)) {
+            captionEl.innerText = '';
           }
-        };
+        }
+        loadedCount++;
+      }
 
-        reader.readAsDataURL(file);
-      });
-
+      showToast(`تم تثبيت (${loadedCount}) شواهد بنجاح! ✓`);
       event.target.value = "";
     }
 
@@ -1820,13 +2437,12 @@ ${imgRule}
 
       if (!box || !btnFiles || !btnText) return;
 
-      // توليد نص البرومبت ديناميكياً مع مراعاة عدد الصور المختار
       box.value = buildPreset(mode, selectedImageCount);
 
       if (mode === 'text') {
         btnText.className = "text-[9.5px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white transition";
         btnFiles.className = "text-[9.5px] font-bold px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition";
-        showToast("تم تفعيل برومبت الصياغة المباشرة (بدون مرفقات)");
+        showToast("تم تفعيل برومبت الصياغة المباشرة");
       } else {
         btnFiles.className = "text-[9.5px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white transition";
         btnText.className = "text-[9.5px] font-bold px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition";
@@ -1835,11 +2451,13 @@ ${imgRule}
     }
 
     function resetAiPrompt() {
+      selectedPromptToneKey = "standard";
+      const sel = document.getElementById("promptToneSelector");
+      if (sel) sel.value = "standard";
       switchPromptMode(currentPromptMode);
-      showToast("تمت استعادة صيغة البرومبت المعتمدة بنجاح!");
+      showToast("تمت استعادة صيغة البرومبت القياسية المعتمدة بنجاح!");
     }
 
-    // تفريغ وحذف كل النصوص القابلة للتعديل في التقرير
     function clearAllTexts() {
       if (!confirm("هل أنت متأكد من حذف وتفريغ جميع النصوص القابلة للتعديل في الورقة؟")) return;
       const sheet = document.getElementById("printableSheet");
@@ -1848,10 +2466,9 @@ ${imgRule}
         el.dataset.previousText = el.innerText;
         el.innerText = "";
       });
-      showToast("تم تفريغ كافة النصوص بنجاح لتعبئتها يدوياً.");
+      showToast("تم تفريغ كافة النصوص بنجاح.");
     }
 
-    // استعادة وإبقاء النصوص الأصلية
     function restoreAllTexts() {
       const sheet = document.getElementById("printableSheet");
       const editables = sheet.querySelectorAll('[contenteditable="true"]');
@@ -1865,7 +2482,6 @@ ${imgRule}
       showToast("تم استعادة كافة النصوص بنجاح!");
     }
 
-    // حفظ المستند الكامل كملف HTML مستقل
     function saveAsHtmlFile() {
       const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
       const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
