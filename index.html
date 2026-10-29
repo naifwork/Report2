@@ -294,15 +294,15 @@
 <body class="py-3 px-2">
 
   <!-- ==================== شاشة الصيانة والحماية الذكية ==================== -->
-  <div id="maintenanceOverlay" class="no-print fixed inset-0 z-[9999999] flex flex-col items-center justify-center bg-slate-950/85 backdrop-blur-xl p-4 select-none transition-opacity duration-300">
-    <div class="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl flex flex-col items-center">
+  <div id="maintenanceOverlay" class="no-print fixed inset-0 z-[9999999] w-screen h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-4 select-none transition-opacity duration-300 overflow-hidden touch-none" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0;">
+    <div class="bg-slate-900/95 border border-slate-700/80 rounded-2xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full text-center shadow-2xl flex flex-col items-center my-auto">
       
       <!-- أيقونة الصيانة: النقر عليها 5 مرات متتالية يفتح الصفحة فوراً -->
-      <div id="secretMaintenanceIcon" onclick="handleSecretUnlock()" class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-3xl mb-4 cursor-pointer active:scale-95 transition-transform" title="النظام">
+      <div id="secretMaintenanceIcon" onclick="handleSecretUnlock()" class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-3xl mb-4 cursor-pointer active:scale-90 transition-transform touch-manipulation" title="النظام">
         <i class="fa-solid fa-screwdriver-wrench"></i>
       </div>
 
-      <h2 class="text-base font-black text-white mb-2">النظام في مرحلة التحديث والتطوير</h2>
+      <h2 class="text-sm sm:text-base font-black text-white mb-2">النظام في مرحلة التحديث والتطوير</h2>
       <p class="text-xs text-slate-300 leading-relaxed mb-4">
         الموقع يخضع حالياً لعمليات صيانة دورية. الرجاء العودة لاحقاً.
       </p>
@@ -408,6 +408,7 @@
     // دالة القفل السريع للخصوصية وتغيير الواجهة إلى (جاري التحديث 👓)
     function lockScreenNow() {
       sessionStorage.removeItem("site_maintenance_unlocked");
+      document.body.style.overflow = "hidden";
       const overlay = document.getElementById("maintenanceOverlay");
       const titleEl = overlay ? overlay.querySelector("h2") : null;
       const subEl = overlay ? overlay.querySelector("p") : null;
@@ -438,6 +439,7 @@
           overlay.style.opacity = "0";
           setTimeout(() => {
             overlay.style.display = "none";
+            document.body.style.overflow = "";
             const titleEl = overlay.querySelector("h2");
             const subEl = overlay.querySelector("p");
             const iconEl = document.getElementById("secretMaintenanceIcon");
@@ -1106,6 +1108,15 @@
       if (cleanCode.endsWith("```")) cleanCode = cleanCode.substring(0, cleanCode.length - 3);
       cleanCode = cleanCode.trim();
 
+      // تنظيف تلقائي ذكي إذا أخرج الذكاء الاصطناعي صفحة كاملة برأس وروابط خطوط تالفة
+      if (cleanCode.includes("<body") || cleanCode.includes("<!DOCTYPE")) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(cleanCode, "text/html");
+        // حذف أي وسم style داخلي قد يحتوي على @font-face بروابط وهمية تعطل خط اليمامة
+        doc.querySelectorAll("style, link, script[src*='tailwind']").forEach(el => el.remove());
+        cleanCode = doc.body ? doc.body.innerHTML.trim() : cleanCode;
+      }
+
       const canvas = document.getElementById("dynamicPageCanvas");
       canvas.innerHTML = cleanCode;
 
@@ -1125,8 +1136,171 @@
       });
 
       checkAndToggleImageUploadButton();
+      prepareDecorativeElements();
+      initIconInspector();
       showToast("تم تطبيق الكود وعكسه على الورقة بنجاح!");
     }
+
+    let activeIconTarget = null;
+
+    function ensureIconPopupExists() {
+      let popup = document.getElementById("iconActionPopup");
+      if (!popup) {
+        popup = document.createElement("div");
+        popup.id = "iconActionPopup";
+        popup.className = "no-print hidden fixed z-[999999] bg-slate-900 border border-slate-700 rounded-xl p-2 shadow-2xl flex items-center gap-1.5 select-none";
+        popup.innerHTML = `
+          <button type="button" onclick="promptReplaceWithCustomEmoji()" class="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 font-bold rounded-lg text-xs transition flex items-center gap-1 shadow-xs" title="استبدال بإيموجي حر">
+            <span>🔄</span> <span>استبدال بإيموجي</span>
+          </button>
+          
+          <div class="flex items-center gap-1 bg-slate-800 px-1.5 py-1 rounded-lg border border-slate-700">
+            <span class="text-[10px] text-slate-300 font-bold">اللون:</span>
+            <button type="button" onclick="applyBadgeColor('#065f46')" class="w-4 h-4 rounded-full bg-[#065f46] border border-white/40 hover:scale-110 transition" title="أخضر رسمي"></button>
+            <button type="button" onclick="applyBadgeColor('#d4a72c')" class="w-4 h-4 rounded-full bg-[#d4a72c] border border-white/40 hover:scale-110 transition" title="ذهبي"></button>
+            <button type="button" onclick="applyBadgeColor('#0284c7')" class="w-4 h-4 rounded-full bg-[#0284c7] border border-white/40 hover:scale-110 transition" title="أزرق"></button>
+            <button type="button" onclick="applyBadgeColor('#e11d48')" class="w-4 h-4 rounded-full bg-[#e11d48] border border-white/40 hover:scale-110 transition" title="عنابي"></button>
+            <button type="button" onclick="applyBadgeColor('#475569')" class="w-4 h-4 rounded-full bg-[#475569] border border-white/40 hover:scale-110 transition" title="رمادي"></button>
+          </div>
+
+          <button type="button" onclick="deleteActiveIconTarget()" class="px-2 py-1 bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white font-bold rounded-lg text-xs transition flex items-center gap-1 shadow-xs" title="حذف هذا الرمز">
+            <span>🗑️</span> <span>حذف</span>
+          </button>
+        `;
+        document.body.appendChild(popup);
+      }
+      return popup;
+    }
+
+    function isDecorativeElement(el) {
+      if (!el || el.id === "dynamicPageCanvas" || el.id === "printableSheet") return false;
+      if (el.tagName.toLowerCase() === 'img') return false;
+      
+      const tag = el.tagName.toLowerCase();
+      const cls = el.className || "";
+      const isSpanDot = tag === 'span' && (cls.includes('rounded-full') || cls.includes('w-2') || cls.includes('h-2') || cls.includes('inline-block')) && el.innerText.trim() === '';
+      const isIconTag = tag === 'i' || tag === 'svg';
+      const isSingleEmoji = el.children.length === 0 && el.innerText.trim().length <= 2 && /\p{Extended_Pictographic}/u.test(el.innerText.trim());
+
+      return isSpanDot || isIconTag || isSingleEmoji;
+    }
+
+    function prepareDecorativeElements() {
+      const canvas = document.getElementById("dynamicPageCanvas");
+      if (!canvas) return;
+      const spans = canvas.querySelectorAll("span, i, svg");
+      spans.forEach(el => {
+        if (isDecorativeElement(el)) {
+          el.setAttribute("contenteditable", "false");
+          el.style.cursor = "pointer";
+          el.style.display = "inline-block";
+          el.style.pointerEvents = "auto";
+          el.title = "انقر لتعديل الدائرة أو استبدالها";
+        }
+      });
+    }
+
+    function initIconInspector() {
+      const canvas = document.getElementById("dynamicPageCanvas");
+      if (!canvas) return;
+
+      const popup = ensureIconPopupExists();
+
+      canvas.addEventListener("mousedown", function(e) {
+        let target = e.target.closest("span.rounded-full, i, svg, [class*='rounded-full']") || e.target;
+        
+        if (!isDecorativeElement(target)) {
+          const parentFlex = e.target.closest(".flex");
+          if (parentFlex) {
+            const siblingDot = parentFlex.querySelector("span.rounded-full, i, svg");
+            if (siblingDot && isDecorativeElement(siblingDot)) {
+              target = siblingDot;
+            }
+          }
+        }
+
+        if (!isDecorativeElement(target)) {
+          if (!e.target.closest("#iconActionPopup")) hideIconPopup();
+          return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        activeIconTarget = target;
+        document.querySelectorAll(".active-icon-highlight").forEach(el => el.classList.remove("active-icon-highlight", "ring-2", "ring-amber-400", "rounded"));
+        target.classList.add("active-icon-highlight", "ring-2", "ring-amber-400", "rounded");
+
+        popup.classList.remove("hidden");
+        popup.style.display = "flex";
+
+        const rect = target.getBoundingClientRect();
+        let topPos = rect.top - 46;
+        if (topPos < 10) topPos = rect.bottom + 8;
+        
+        let leftPos = rect.left + (rect.width / 2) - (popup.offsetWidth / 2);
+        leftPos = Math.max(10, Math.min(window.innerWidth - popup.offsetWidth - 10, leftPos));
+
+        popup.style.top = topPos + "px";
+        popup.style.left = leftPos + "px";
+      }, true);
+    }
+
+    function hideIconPopup() {
+      const popup = document.getElementById("iconActionPopup");
+      if (popup) {
+        popup.classList.add("hidden");
+        popup.style.display = "none";
+      }
+      if (activeIconTarget) {
+        activeIconTarget.classList.remove("active-icon-highlight", "ring-2", "ring-amber-400", "rounded");
+        activeIconTarget = null;
+      }
+    }
+
+    function promptReplaceWithCustomEmoji() {
+      if (!activeIconTarget) return;
+      const userChoice = prompt("أدخل الإيموجي أو الرمز الذي تريده هنا:", "⭐");
+      if (userChoice && userChoice.trim()) {
+        const span = document.createElement("span");
+        span.className = "inline-block text-xs align-middle mx-0.5 cursor-pointer select-none";
+        span.innerText = userChoice.trim();
+        span.setAttribute("contenteditable", "true");
+        activeIconTarget.parentNode.replaceChild(span, activeIconTarget);
+        hideIconPopup();
+        showToast("تم استبدال الرمز بنجاح! ✨");
+      }
+    }
+
+    function applyBadgeColor(hex) {
+      if (!activeIconTarget) return;
+      if (activeIconTarget.style.background || activeIconTarget.classList.contains('rounded-full')) {
+        activeIconTarget.style.background = hex;
+        activeIconTarget.style.backgroundColor = hex;
+      } else {
+        activeIconTarget.style.color = hex;
+      }
+      showToast("تم تغيير لون الرمز بنجاح 🎨");
+    }
+
+    function deleteActiveIconTarget() {
+      if (!activeIconTarget) return;
+      const parent = activeIconTarget.parentNode;
+      activeIconTarget.remove();
+      hideIconPopup();
+      if (parent && parent.innerText.trim() === '' && parent.children.length === 0) {
+        parent.remove();
+      }
+      showToast("تم حذف العنصر بنجاح 🗑️");
+    }
+
+    document.addEventListener("mousedown", function(e) {
+      if (!e.target.closest("#iconActionPopup") && !isDecorativeElement(e.target)) {
+        hideIconPopup();
+      }
+    });
+
+    setTimeout(initIconInspector, 200);
 
     // إدارة البرومبت الذكي
     let currentPromptMode = 'files';
@@ -1148,6 +1322,8 @@
       const imgRule = getImageInstruction(imgCount);
       const toneDirective = PROMPT_TONES[selectedPromptToneKey].directive;
 
+      const subTitleRule = `\n- إلزامية العنوان الفرعي: يجب أن يتضمن الكود في بدايته عنواناً رئيسياً للمعيار/النشاط، وأسفله مباشرة عنواناً فرعياً دقيقاً وموجزاً ومخصصاً يصف جوهر العمل مستخلصاً من السياق، بشرط خلوه التام من كلمة "عنوان فرعي" وبلا أي حشو أو عبارات تقليدية مبتذلة.`;
+
       if (mode === 'files') {
         return `حلل الملفات المرفقة واستخرج بيانات المعيار المطلوب، ثم برمج لي "محتوى داخلي فقط" ليتم حقنه في وسط صفحة A4 مجهزة ومصممة مسبقاً:
 
@@ -1155,9 +1331,9 @@
 [ ${toneDirective} ]
 
 شروط برمجية صارمة جداً لمنع تكرار عناصر الصفحة:
-1. ممنوع نهائياً توليد ترويسة (اسم الوزارة، الإدارة، المدرسة، عنوان التقرير)، وممنوع إضافة اسم المعلم أو المدير أو التواقيع نهائياً لأنها مبنية وموجودة في الصفحة مسبقاً.
+1. ممنوع نهائياً توليد ترويسة (اسم الوزارة، الإدارة، المدرسة، عنوان التقرير العام)، وممنوع إضافة اسم المعلم أو المدير أو التواقيع نهائياً لأنها مبنية وموجودة في الصفحة مسبقاً.
 2. لا تضع أي غلاف خارجي أو إطار صفحة (مثل class="a4-page" أو كروت وهوامش تجعلها تبدو كصفحة مستقلة).
-3. الكود الناتج يجب أن يكون عبارة عن عنصر <div> مرن ومباشر يحتوي على محتوى المعيار المتناسب مع نمط الصياغة المختار.
+3. الكود الناتج يجب أن يكون عبارة عن عنصر <div> مرن ومباشر يحتوي على محتوى المعيار المتناسب مع نمط الصياغة المختار.${subTitleRule}
 4. استخدم خط 'Alyamama' مع Tailwind CSS وألوان التعليم الرسمية (#065f46، الذهبي، والرمادي).
 ${imgRule}
 6. اجعل كافة النصوص والأرقام قابلة للتعديل المباشر (contenteditable="true").
@@ -1173,7 +1349,7 @@ ${imgRule}
 المطلوب برمجته بشروط صارمة تمنع تكرار الصفحة والعناصر:
 1. ممنوع نهائياً توليد ترويسة رسمية أو عنوان عام، وممنوع ذكر اسم المعلم أو المدير أو التواقيع نهائياً لأنها موجودة وثابتة في التقرير.
 2. لا تضع أي إطار ورقة خارجي أو هوامش صفحة مستقلة تجعلها تبدو كصفحة داخل صفحة.
-3. قم ببرمجة <div> متكامل يملأ المساحة المتاحة متناسباً مع نمط الصياغة المختار.
+3. قم ببرمجة <div> متكامل يملأ المساحة المتاحة متناسباً مع نمط الصياغة المختار.${subTitleRule}
 4. استخدم خط اليمامة 'Alyamama' مع Tailwind CSS ودرجات الأخضر الرسمي (#065f46، الذهبي، والرمادي).
 ${imgRule}
 6. اجعل جميع النصوص والبيانات الرقمية قابلة للتعديل الفوري عبر (contenteditable="true").
@@ -2115,6 +2291,14 @@ ${imgRule}
       // 1. إخفاء أزرار الحذف ومقابض التحجيم أثناء الالتقاط فقط
       const uiControls = document.querySelectorAll('.overlay-del-btn, .overlay-resize-handle, #evidenceFloatingToolbar');
       uiControls.forEach(el => el.style.setProperty('display', 'none', 'important'));
+
+      // إصلاح تقطع الحروف العربية: تصفير تباعد الحروف (letter-spacing) لضمان اتصال الحروف في html2canvas
+      const textNodes = (wrapper || document).querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, td, th');
+      const prevSpacings = [];
+      textNodes.forEach((el, idx) => {
+        prevSpacings[idx] = el.style.letterSpacing;
+        el.style.setProperty('letter-spacing', 'normal', 'important');
+      });
 
       const originalTransform = wrapper ? wrapper.style.transform : "";
       if (wrapper) wrapper.style.transform = "none";
