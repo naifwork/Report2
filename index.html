@@ -805,6 +805,279 @@
   </main>
   </div>
 
+  <script>
+    // 1. إصلاح شاشة القفل وتغطيتها 100% للجوال والمكتبي وتجميد الصفحة
+    function applyLockStyles(isLocked) {
+      const overlay = document.getElementById("maintenanceOverlay");
+      if (!overlay) return;
+      if (isLocked) {
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999999; display:flex; align-items:center; justify-content:center; background-color:rgba(2,6,23,0.92); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); pointer-events:all; touch-action:none;";
+        document.body.style.overflow = "hidden";
+      } else {
+        overlay.style.display = "none";
+        document.body.style.overflow = "";
+      }
+    }
+
+    // استخراج اسم معتمد ونقي للملفات من شريط العنوان الفرعي
+    function getCleanDocumentTitle() {
+      const subHeader = document.querySelector("#reportSubHeaderBar h3, #reportSubHeaderBar, #dynamicPageCanvas h3, #dynamicPageCanvas h2");
+      let title = "";
+      if (subHeader) {
+        title = subHeader.innerText.trim();
+      }
+      title = title.replace(/[\\/:*?"<>|#]/g, "").replace(/\s+/g, "_");
+      if (!title || title.length < 3) {
+        title = "تقرير_شاهد_الأداء_الوظيفي_نايف_الشومر";
+      } else {
+        title = `شاهد_${title}_نايف_الشومر`;
+      }
+      return title;
+    }
+
+    // تحديث دالة الحفظ الذكي للملف بالاسم المستخلص
+    window.saveAsHtmlFile = function() {
+      const docTitle = getCleanDocumentTitle();
+      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.href = URL.createObjectURL(blob);
+      downloadAnchor.download = `${docTitle}.html`;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      document.body.removeChild(downloadAnchor);
+      showToast("تم حفظ الملف باسم المعيار المستخلص بنجاح! 💾✨");
+    };
+
+    // ربط القفل والفتح التلقائي
+    const _origLock = window.lockScreenNow;
+    window.lockScreenNow = function() {
+      sessionStorage.removeItem("site_maintenance_unlocked");
+      const overlay = document.getElementById("maintenanceOverlay");
+      const titleEl = overlay ? overlay.querySelector("h2") : null;
+      const subEl = overlay ? overlay.querySelector("p") : null;
+      const iconEl = document.getElementById("secretMaintenanceIcon");
+
+      if (titleEl) titleEl.innerText = "جاري التحديث 👓";
+      if (subEl) subEl.innerText = "تم تفعيل وضع الحماية والخصوصية المؤقت. يرجى المتابعة لاحقاً.";
+      if (iconEl) iconEl.innerHTML = '<span class="text-3xl">👓</span>';
+
+      applyLockStyles(true);
+      if (typeof showToast === "function") showToast("تم قفل الشاشة: جاري التحديث 👓");
+    };
+
+    const _origSecretUnlock = window.handleSecretUnlock;
+    window.handleSecretUnlock = function() {
+      secretTapCount++;
+      clearTimeout(secretTapTimer);
+      secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 2000);
+
+      if (secretTapCount >= 5) {
+        secretTapCount = 0;
+        clearTimeout(secretTapTimer);
+        const overlay = document.getElementById("maintenanceOverlay");
+        if (overlay) {
+          overlay.style.opacity = "0";
+          setTimeout(() => {
+            applyLockStyles(false);
+            const titleEl = overlay.querySelector("h2");
+            const subEl = overlay.querySelector("p");
+            const iconEl = document.getElementById("secretMaintenanceIcon");
+            if (titleEl) titleEl.innerText = "النظام في مرحلة التحديث والتطوير";
+            if (subEl) subEl.innerText = "الموقع يخضع حالياً لعمليات صيانة دورية وتحديثات أمنية مجدولة. الرجاء العودة لاحقاً.";
+            if (iconEl) iconEl.innerHTML = '<i class="fa-solid fa-screwdriver-wrench"></i>';
+          }, 300);
+        }
+        sessionStorage.setItem("site_maintenance_unlocked", "true");
+        if (typeof showToast === "function") showToast("مرحباً بك! تم إلغاء القفل بنجاح 🔓✨");
+      }
+    };
+
+    if (sessionStorage.getItem("site_maintenance_unlocked") !== "true") {
+      document.addEventListener("DOMContentLoaded", () => applyLockStyles(true));
+    }
+  </script>
+
+  <script>
+    // 1. نظام القفل الشامل وتغطية 100% لكافة الأجهزة مع تجميد التفاعل خلفه
+    function applyLockStyles(isLocked) {
+      const overlay = document.getElementById("maintenanceOverlay");
+      if (!overlay) return;
+      if (isLocked) {
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999999; display:flex; align-items:center; justify-content:center; background-color:rgba(2,6,23,0.92); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); pointer-events:all; touch-action:none;";
+        document.body.style.overflow = "hidden";
+      } else {
+        overlay.style.display = "none";
+        document.body.style.overflow = "";
+      }
+    }
+
+    // 2. استخراج العنوان الفرعي النقي لتسمية الملفات تلقائياً
+    function getCleanDocumentTitle() {
+      const subHeader = document.querySelector("#reportSubHeaderBar h3, #reportSubHeaderBar, #dynamicPageCanvas h3, #dynamicPageCanvas h2");
+      let title = "";
+      if (subHeader) {
+        title = subHeader.innerText.trim();
+      }
+      title = title.replace(/[\\/:*?"<>|#]/g, "").replace(/\s+/g, "_");
+      if (!title || title.length < 3) {
+        title = "تقرير_شاهد_الأداء_الوظيفي_نايف_الشومر";
+      } else {
+        title = `شاهد_${title}_نايف_الشومر`;
+      }
+      return title;
+    }
+
+    // 3. حفظ الـ HTML باسم المعيار المستخلص
+    window.saveAsHtmlFile = function() {
+      const docTitle = getCleanDocumentTitle();
+      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.href = URL.createObjectURL(blob);
+      downloadAnchor.download = `${docTitle}.html`;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      document.body.removeChild(downloadAnchor);
+      showToast("تم حفظ الملف باسم المعيار بنجاح! 💾✨");
+    };
+
+    // ربط أحداث القفل والفتح السري
+    window.lockScreenNow = function() {
+      sessionStorage.removeItem("site_maintenance_unlocked");
+      const overlay = document.getElementById("maintenanceOverlay");
+      const titleEl = overlay ? overlay.querySelector("h2") : null;
+      const subEl = overlay ? overlay.querySelector("p") : null;
+      const iconEl = document.getElementById("secretMaintenanceIcon");
+
+      if (titleEl) titleEl.innerText = "جاري التحديث 👓";
+      if (subEl) subEl.innerText = "تم تفعيل وضع الحماية والخصوصية المؤقت. يرجى المتابعة لاحقاً.";
+      if (iconEl) iconEl.innerHTML = '<span class="text-3xl">👓</span>';
+
+      applyLockStyles(true);
+      if (typeof showToast === "function") showToast("تم قفل الشاشة: جاري التحديث 👓");
+    };
+
+    window.handleSecretUnlock = function() {
+      secretTapCount++;
+      clearTimeout(secretTapTimer);
+      secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 2000);
+
+      if (secretTapCount >= 5) {
+        secretTapCount = 0;
+        clearTimeout(secretTapTimer);
+        const overlay = document.getElementById("maintenanceOverlay");
+        if (overlay) {
+          overlay.style.opacity = "0";
+          setTimeout(() => {
+            applyLockStyles(false);
+            const titleEl = overlay.querySelector("h2");
+            const subEl = overlay.querySelector("p");
+            const iconEl = document.getElementById("secretMaintenanceIcon");
+            if (titleEl) titleEl.innerText = "النظام في مرحلة التحديث والتطوير";
+            if (subEl) subEl.innerText = "الموقع يخضع حالياً لعمليات صيانة دورية. الرجاء العودة لاحقاً.";
+            if (iconEl) iconEl.innerHTML = '<i class="fa-solid fa-screwdriver-wrench"></i>';
+          }, 300);
+        }
+        sessionStorage.setItem("site_maintenance_unlocked", "true");
+        if (typeof showToast === "function") showToast("مرحباً بك! تم إلغاء القفل بنجاح 🔓✨");
+      }
+    };
+
+    if (sessionStorage.getItem("site_maintenance_unlocked") !== "true") {
+      document.addEventListener("DOMContentLoaded", () => applyLockStyles(true));
+    }
+  </script>
+
+  <script>
+    // 1. نظام القفل الشامل وتغطية 100% لكافة الأجهزة مع تجميد التفاعل خلفه
+    function applyLockStyles(isLocked) {
+      const overlay = document.getElementById("maintenanceOverlay");
+      if (!overlay) return;
+      if (isLocked) {
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999999; display:flex; align-items:center; justify-content:center; background-color:rgba(2,6,23,0.92); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); pointer-events:all; touch-action:none;";
+        document.body.style.overflow = "hidden";
+      } else {
+        overlay.style.display = "none";
+        document.body.style.overflow = "";
+      }
+    }
+
+    // 2. استخراج العنوان الفرعي النقي فقط بدون أي أسماء لتسمية الملفات
+    function getCleanDocumentTitle() {
+      const subHeader = document.querySelector("#reportSubHeaderBar h3, #reportSubHeaderBar, #dynamicPageCanvas h3, #dynamicPageCanvas h2");
+      let title = "";
+      if (subHeader) {
+        title = subHeader.innerText.trim();
+      }
+      title = title.replace(/[\\/:*?"<>|#]/g, "").replace(/\s+/g, "_");
+      if (!title || title.length < 3) {
+        title = "شاهد_إنجاز";
+      }
+      return title;
+    }
+
+    // 3. حفظ الـ HTML باسم العنوان الفرعي فقط
+    window.saveAsHtmlFile = function() {
+      const docTitle = getCleanDocumentTitle();
+      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.href = URL.createObjectURL(blob);
+      downloadAnchor.download = `${docTitle}.html`;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      document.body.removeChild(downloadAnchor);
+      showToast("تم حفظ الملف باسم العنوان الفرعي بنجاح! 💾✨");
+    };
+
+    // ربط أحداث القفل والفتح السري
+    window.lockScreenNow = function() {
+      sessionStorage.removeItem("site_maintenance_unlocked");
+      const overlay = document.getElementById("maintenanceOverlay");
+      const titleEl = overlay ? overlay.querySelector("h2") : null;
+      const subEl = overlay ? overlay.querySelector("p") : null;
+      const iconEl = document.getElementById("secretMaintenanceIcon");
+
+      if (titleEl) titleEl.innerText = "جاري التحديث 👓";
+      if (subEl) subEl.innerText = "تم تفعيل وضع الحماية والخصوصية المؤقت. يرجى المتابعة لاحقاً.";
+      if (iconEl) iconEl.innerHTML = '<span class="text-3xl">👓</span>';
+
+      applyLockStyles(true);
+      if (typeof showToast === "function") showToast("تم قفل الشاشة: جاري التحديث 👓");
+    };
+
+    window.handleSecretUnlock = function() {
+      secretTapCount++;
+      clearTimeout(secretTapTimer);
+      secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 2000);
+
+      if (secretTapCount >= 5) {
+        secretTapCount = 0;
+        clearTimeout(secretTapTimer);
+        const overlay = document.getElementById("maintenanceOverlay");
+        if (overlay) {
+          overlay.style.opacity = "0";
+          setTimeout(() => {
+            applyLockStyles(false);
+            const titleEl = overlay.querySelector("h2");
+            const subEl = overlay.querySelector("p");
+            const iconEl = document.getElementById("secretMaintenanceIcon");
+            if (titleEl) titleEl.innerText = "النظام في مرحلة التحديث والتطوير";
+            if (subEl) subEl.innerText = "الموقع يخضع حالياً لعمليات صيانة دورية. الرجاء العودة لاحقاً.";
+            if (iconEl) iconEl.innerHTML = '<i class="fa-solid fa-screwdriver-wrench"></i>';
+          }, 300);
+        }
+        sessionStorage.setItem("site_maintenance_unlocked", "true");
+        if (typeof showToast === "function") showToast("مرحباً بك! تم إلغاء القفل بنجاح 🔓✨");
+      }
+    };
+
+    if (sessionStorage.getItem("site_maintenance_unlocked") !== "true") {
+      document.addEventListener("DOMContentLoaded", () => applyLockStyles(true));
+    }
+  </script>
+
   <!-- ==================== المحرك البرمجي المحدث ==================== -->
   <script>
     // عرض رسالة Toast مخصصة
@@ -825,6 +1098,81 @@
         toast.className = toast.className.replace("show", "");
       }, 2500);
     }
+
+    // 4. دمج شرط العنوان الفرعي الإلزامي المباشر داخل محرك البرومبات
+    const _origBuildPreset = window.buildPreset;
+    window.buildPreset = function(mode, imgCount) {
+      const imgRule = getImageInstruction(imgCount);
+      const toneDirective = PROMPT_TONES[selectedPromptToneKey].directive;
+      const subTitleRule = `0. أول عنصر في الكود إلزامي ومباشر: شريط عنوان فرعي يبرز اسم المعيار/النشاط مباشرة:
+   - افهم الفكرة وجوهر المعيار من المرفقات أو النص واصنع منه عنواناً تربوياً رسمياً رشيقاً ومركزاً (3 إلى 6 كلمات).
+   - ممنوع نهائياً كتابة أي مقدمات حشو مثل (الموضوع: / العنوان الفرعي: / المعيار:).
+   - اجعله كأول سطر في الكود بهذا الهيكل تماماً:
+     <div id="reportSubHeaderBar" class="w-full bg-emerald-50 border border-emerald-200/80 rounded-lg py-1.5 px-3 mb-2.5 text-center shadow-xs">
+       <h3 class="text-xs sm:text-sm font-black text-emerald-950 tracking-wide" contenteditable="true">[اكتب هنا العنوان المستخلص مباشرة]</h3>
+     </div>`;
+
+      if (mode === 'files') {
+        return `حلل الملفات المرفقة واستخرج بيانات المعيار المطلوب، ثم برمج لي "محتوى داخلي فقط" ليتم حقنه في وسط صفحة A4 مجهزة ومصممة مسبقاً:
+
+توجيه نمط الصياغة المطلوب بدقة:
+[ ${toneDirective} ]
+
+شروط برمجية صارمة جداً لمنع تكرار عناصر الصفحة:
+${subTitleRule}
+1. ممنوع نهائياً توليد ترويسة (اسم الوزارة، الإدارة، المدرسة، عنوان التقرير العام)، وممنوع إضافة اسم المعلم أو المدير أو التواقيع نهائياً لأنها مبنية وموجودة في الصفحة مسبقاً.
+2. لا تضع أي غلاف خارجي أو إطار صفحة (مثل class="a4-page" أو كروت وهوامش تجعلها تبدو كصفحة مستقلة).
+3. الكود الناتج يجب أن يكون عبارة عن عنصر <div> مرن ومباشر يحتوي على محتوى المعيار المتناسب مع نمط الصياغة المختار.
+4. استخدم خط 'Alyamama' مع Tailwind CSS وألوان التعليم الرسمية (#065f46، الذهبي،
+
+    // 4. دمج شرط العنوان الفرعي الإلزامي المباشر داخل محرك البرومبات
+    const _origBuildPreset = window.buildPreset;
+    window.buildPreset = function(mode, imgCount) {
+      const imgRule = getImageInstruction(imgCount);
+      const toneDirective = PROMPT_TONES[selectedPromptToneKey].directive;
+      const subTitleRule = `0. أول عنصر في الكود إلزامي ومباشر: شريط عنوان فرعي يبرز اسم المعيار/النشاط مباشرة:
+   - افهم الفكرة وجوهر المعيار من المرفقات أو النص واصنع منه عنواناً تربوياً رسمياً رشيقاً ومركزاً (3 إلى 6 كلمات).
+   - ممنوع نهائياً كتابة أي مقدمات حشو مثل (الموضوع: / العنوان الفرعي: / المعيار:).
+   - اجعله كأول سطر في الكود بهذا الهيكل تماماً:
+     <div id="reportSubHeaderBar" class="w-full bg-emerald-50 border border-emerald-200/80 rounded-lg py-1.5 px-3 mb-2.5 text-center shadow-xs">
+       <h3 class="text-xs sm:text-sm font-black text-emerald-950 tracking-wide" contenteditable="true">[اكتب هنا العنوان المستخلص مباشرة]</h3>
+     </div>`;
+
+      if (mode === 'files') {
+        return `حلل الملفات المرفقة واستخرج بيانات المعيار المطلوب، ثم برمج لي "محتوى داخلي فقط" ليتم حقنه في وسط صفحة A4 مجهزة ومصممة مسبقاً:
+
+توجيه نمط الصياغة المطلوب بدقة:
+[ ${toneDirective} ]
+
+شروط برمجية صارمة جداً لمنع تكرار عناصر الصفحة:
+${subTitleRule}
+1. ممنوع نهائياً توليد ترويسة (اسم الوزارة، الإدارة، المدرسة، عنوان التقرير العام)، وممنوع إضافة اسم المعلم أو المدير أو التواقيع نهائياً لأنها مبنية وموجودة في الصفحة مسبقاً.
+2. لا تضع أي غلاف خارجي أو إطار صفحة (مثل class="a4-page" أو كروت وهوامش تجعلها تبدو كصفحة مستقلة).
+3. الكود الناتج يجب أن يكون عبارة عن عنصر <div> مرن ومباشر يحتوي على محتوى المعيار المتناسب مع نمط الصياغة المختار.
+4. استخدم خط 'Alyamama' مع Tailwind CSS وألوان التعليم الرسمية (#065f46، الذهبي، والرمادي).
+${imgRule}
+6. اجعل كافة النصوص والأرقام قابلة للتعديل المباشر (contenteditable="true").
+7. استغل المساحة بشكل مضغوط ومحكم ليناسب الارتفاع المتبقي من صفحة A4 دون تجاوز الورقة عند الطباعة.
+8. لا تكتب أي مقدمات أو شروحات، فقط أعطني كود الـ HTML / JS محاطاً بعلامات \`\`\`html فقط.`;
+      } else {
+        return `أريد تصميم وبرمجة "محتوى داخلي فقط" لشاهد إنجاز رسمي للأداء الوظيفي بدون مرفقات، ليتم حقنه في وسط صفحة A4 مجهزة مسبقاً:
+[اكتب هنا موضوع المعيار بالتفصيل، مثلاً: معيار تفعيل منصة تعليمية / خطة رعاية الموهوبين / الفاقد التعليمي / مجتمعات التعلم المهنية...].
+
+توجيه نمط الصياغة المطلوب بدقة:
+[ ${toneDirective} ]
+
+المطلوب برمجته بشروط صارمة تمنع تكرار الصفحة والعناصر:
+${subTitleRule}
+1. ممنوع نهائياً توليد ترويسة رسمية أو عنوان عام، وممنوع ذكر اسم المعلم أو المدير أو التواقيع نهائياً لأنها موجودة وثابتة في التقرير.
+2. لا تضع أي إطار ورقة خارجي أو هوامش صفحة مستقلة تجعلها تبدو كصفحة داخل صفحة.
+3. قم ببرمجة <div> متكامل يملأ المساحة المتاحة متناسباً مع نمط الصياغة المختار.
+4. استخدم خط اليمامة 'Alyamama' مع Tailwind CSS ودرجات الأخضر الرسمي (#065f46، الذهبي، والرمادي).
+${imgRule}
+6. اجعل جميع النصوص والبيانات الرقمية قابلة للتعديل الفوري عبر (contenteditable="true").
+7. استغل المساحة المتاحة بارتفاع متزن ومضغوط يناسب الحيز المتبقي من ورقة A4 بدقة متناهية لمنع تجاوز الصفحة عند الطباعة.
+8. لا تكتب أي كلام إضافي أو مقدمات، فقط كود الـ HTML / JS داخل علامات \`\`\`html فقط.`;
+      }
+    };
 
     // كائن أنماط الصياغة والبرومبات الـ 9 المعتمدة
     const PROMPT_TONES = {
