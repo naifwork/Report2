@@ -381,6 +381,29 @@
       </div>
 
       <div class="flex items-center gap-1.5 flex-wrap">
+        <!-- زر استعراض التقارير السابقة وقائمته المنسدلة -->
+        <div class="relative inline-flex items-center">
+          <button type="button" onclick="toggleArchiveDropdown()" id="archiveToggleBtn" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 hover:border-amber-500/50 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs" title="استعراض التقارير السابقة المحفوظة تلقائياً في ذاكرة الجهاز">
+            <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
+            <span id="archiveCountBadge">التقارير السابقة (0)</span>
+          </button>
+
+          <div id="archiveDropdownPanel" class="hidden absolute top-full right-0 mt-1.5 w-80 bg-slate-900/98 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl p-2.5 z-[999999] flex flex-col gap-2 text-right select-none">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2 px-1">
+              <span class="text-[11px] font-black text-emerald-400 flex items-center gap-1">
+                <i class="fa-solid fa-database"></i> المحفوظات التلقائية
+              </span>
+              <button type="button" onclick="clearAllArchiveReports()" class="text-[9.5px] font-bold text-rose-300 hover:text-white bg-rose-950/70 hover:bg-rose-900 px-2 py-0.5 rounded border border-rose-800 transition" title="حذف ومسح جميع التقارير السابقة">
+                حذف كل التقارير 🗑️
+              </button>
+            </div>
+            
+            <div id="archiveItemsList" class="max-h-60 overflow-y-auto space-y-1.5 pr-0.5 text-xs">
+              <!-- تُعرض عناصر الأرشيف تلقائياً هنا -->
+            </div>
+          </div>
+        </div>
+
         <button onclick="clearAllTexts()" class="px-2.5 py-1.5 bg-rose-950/70 hover:bg-rose-900 border border-rose-800 text-rose-200 rounded-lg text-xs font-bold transition flex items-center gap-1" title="حذف وتفريغ جميع النصوص القابلة للتعديل بالكامل">
           <i class="fa-solid fa-eraser"></i> حذف كل النصوص
         </button>
@@ -1108,11 +1131,12 @@
       if (cleanCode.endsWith("```")) cleanCode = cleanCode.substring(0, cleanCode.length - 3);
       cleanCode = cleanCode.trim();
 
-      // تنظيف تلقائي ذكي إذا أخرج الذكاء الاصطناعي صفحة كاملة برأس وروابط خطوط تالفة
+      // إزالة قيود منع التحديد لتمكين حركة مؤشر الكتابة والفأرة
+      cleanCode = cleanCode.replace(/\bselect-none\b/g, "select-text");
+
       if (cleanCode.includes("<body") || cleanCode.includes("<!DOCTYPE")) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(cleanCode, "text/html");
-        // حذف أي وسم style داخلي قد يحتوي على @font-face بروابط وهمية تعطل خط اليمامة
         doc.querySelectorAll("style, link, script[src*='tailwind']").forEach(el => el.remove());
         cleanCode = doc.body ? doc.body.innerHTML.trim() : cleanCode;
       }
@@ -1122,6 +1146,7 @@
 
       const textElements = canvas.querySelectorAll("p, span, h1, h2, h3, h4, h5, h6, td, th, li, strong");
       textElements.forEach(el => {
+        el.classList.remove("select-none");
         if (!el.hasAttribute("contenteditable")) {
           el.setAttribute("contenteditable", "true");
         }
@@ -1138,38 +1163,116 @@
       checkAndToggleImageUploadButton();
       prepareDecorativeElements();
       initIconInspector();
-      showToast("تم تطبيق الكود وعكسه على الورقة بنجاح!");
+
+      // حفظ تلقائي فوري في ذاكرة الجهاز عند تطبيق الكود
+      autoSaveCurrentReport();
+
+      showToast("تم تطبيق الكود وحفظه تلقائياً بالأرشيف! 🚀✓");
     }
 
     let activeIconTarget = null;
+    let activeSelectedRange = null;
 
     function ensureIconPopupExists() {
       let popup = document.getElementById("iconActionPopup");
       if (!popup) {
         popup = document.createElement("div");
         popup.id = "iconActionPopup";
-        popup.className = "no-print hidden fixed z-[999999] bg-slate-900 border border-slate-700 rounded-xl p-2 shadow-2xl flex items-center gap-1.5 select-none";
+        popup.className = "no-print hidden fixed z-[999999] bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-xl p-1.5 shadow-2xl flex items-center gap-1.5 select-none";
         popup.innerHTML = `
-          <button type="button" onclick="promptReplaceWithCustomEmoji()" class="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 font-bold rounded-lg text-xs transition flex items-center gap-1 shadow-xs" title="استبدال بإيموجي حر">
-            <span>🔄</span> <span>استبدال بإيموجي</span>
+          <button type="button" id="editActionBtn" onclick="handleToolbarEditAction()" class="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 font-bold rounded-lg text-xs transition flex items-center gap-1 shadow-xs" title="تعديل المحتوى">
+            <span id="editActionIcon">✏️</span> <span id="editActionText">تعديل التحديد</span>
           </button>
           
           <div class="flex items-center gap-1 bg-slate-800 px-1.5 py-1 rounded-lg border border-slate-700">
             <span class="text-[10px] text-slate-300 font-bold">اللون:</span>
-            <button type="button" onclick="applyBadgeColor('#065f46')" class="w-4 h-4 rounded-full bg-[#065f46] border border-white/40 hover:scale-110 transition" title="أخضر رسمي"></button>
-            <button type="button" onclick="applyBadgeColor('#d4a72c')" class="w-4 h-4 rounded-full bg-[#d4a72c] border border-white/40 hover:scale-110 transition" title="ذهبي"></button>
+            <button type="button" onclick="applyBadgeColor('#065f46')" class="w-4 h-4 rounded-full bg-[#065f46] border border-white/40 hover:scale-110 transition" title="أخضر"></button>
+            <button type="button" onclick="applyBadgeColor('#d97706')" class="w-4 h-4 rounded-full bg-[#d97706] border border-white/40 hover:scale-110 transition" title="كهرماني"></button>
             <button type="button" onclick="applyBadgeColor('#0284c7')" class="w-4 h-4 rounded-full bg-[#0284c7] border border-white/40 hover:scale-110 transition" title="أزرق"></button>
             <button type="button" onclick="applyBadgeColor('#e11d48')" class="w-4 h-4 rounded-full bg-[#e11d48] border border-white/40 hover:scale-110 transition" title="عنابي"></button>
-            <button type="button" onclick="applyBadgeColor('#475569')" class="w-4 h-4 rounded-full bg-[#475569] border border-white/40 hover:scale-110 transition" title="رمادي"></button>
+            <button type="button" onclick="applyBadgeColor('#0f172a')" class="w-4 h-4 rounded-full bg-[#0f172a] border border-white/40 hover:scale-110 transition" title="داكن"></button>
           </div>
 
-          <button type="button" onclick="deleteActiveIconTarget()" class="px-2 py-1 bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white font-bold rounded-lg text-xs transition flex items-center gap-1 shadow-xs" title="حذف هذا الرمز">
-            <span>🗑️</span> <span>حذف</span>
+          <button type="button" onclick="deleteSelectedTextOnly()" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold rounded-lg text-xs transition flex items-center gap-1 shadow-xs border border-slate-700" title="حذف النص فقط وإبقاء المربع">
+            <span>📝</span> <span>حذف النص</span>
+          </button>
+
+          <button type="button" onclick="deleteWholeElementContainer()" class="px-2 py-1 bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white font-bold rounded-lg text-xs transition flex items-center gap-1 shadow-xs" title="حذف المربع بالكامل مع خلفيته">
+            <span>🗑️</span> <span>حذف العنصر كامل</span>
           </button>
         `;
         document.body.appendChild(popup);
       }
       return popup;
+    }
+
+    function handleToolbarEditAction() {
+      if (activeIconTarget && isDecorativeElement(activeIconTarget)) {
+        promptReplaceWithCustomEmoji();
+      } else if (activeSelectedRange && !activeSelectedRange.collapsed) {
+        const currentText = activeSelectedRange.toString();
+        const newText = prompt("تعديل النص المحدد:", currentText);
+        if (newText !== null) {
+          activeSelectedRange.deleteContents();
+          activeSelectedRange.insertNode(document.createTextNode(newText));
+          hideIconPopup();
+          showToast("تم تحديث النص المحدد بنجاح! ✏️");
+        }
+      } else if (activeIconTarget) {
+        const currentText = activeIconTarget.innerText.trim();
+        const newText = prompt("تعديل نص الكتلة:", currentText);
+        if (newText !== null) {
+          activeIconTarget.innerText = newText;
+          hideIconPopup();
+          showToast("تم تحديث الكتلة النصية! ✏️");
+        }
+      }
+    }
+
+    // حذف الكلمات المحددة فقط
+    function deleteSelectedTextOnly() {
+      if (activeSelectedRange && !activeSelectedRange.collapsed) {
+        activeSelectedRange.deleteContents();
+        hideIconPopup();
+        showToast("تم حذف النص المحدد فقط 📝");
+      } else if (activeIconTarget) {
+        activeIconTarget.innerText = "";
+        hideIconPopup();
+        showToast("تم تفريغ النص 📝");
+      }
+    }
+
+    // حذف الصندوق الحاوي بالكامل بما فيه من خلفية وإطار
+    function deleteWholeElementContainer() {
+      let targetToDelete = activeIconTarget;
+
+      // العثور على أقرب حاوية حقيقية (مثل الشارة ذات الخلفية أو الفقرة أو الخلية)
+      if (activeSelectedRange) {
+        const ancestor = activeSelectedRange.commonAncestorContainer;
+        const parent = ancestor.nodeType === 1 ? ancestor : ancestor.parentElement;
+        targetToDelete = parent.closest("span, p, h1, h2, h3, h4, td, th, div.evidence-card, div[class*='bg-']") || parent;
+      }
+
+      if (targetToDelete && targetToDelete.id !== "dynamicPageCanvas" && targetToDelete.id !== "printableSheet") {
+        targetToDelete.remove();
+        hideIconPopup();
+        showToast("تم حذف العنصر بالكامل مع إطاره وخلفيته 🗑️✓");
+      }
+    }
+
+    function positionFloatingPopup(rect) {
+      const popup = ensureIconPopupExists();
+      popup.classList.remove("hidden");
+      popup.style.display = "flex";
+
+      let topPos = rect.top - 46;
+      if (topPos < 10) topPos = rect.bottom + 8;
+
+      let leftPos = rect.left + (rect.width / 2) - (popup.offsetWidth / 2);
+      leftPos = Math.max(10, Math.min(window.innerWidth - popup.offsetWidth - 10, leftPos));
+
+      popup.style.top = `${topPos}px`;
+      popup.style.left = `${leftPos}px`;
     }
 
     function isDecorativeElement(el) {
@@ -1204,46 +1307,60 @@
       const canvas = document.getElementById("dynamicPageCanvas");
       if (!canvas) return;
 
-      const popup = ensureIconPopupExists();
+      ensureIconPopupExists();
+      canvas.querySelectorAll(".select-none").forEach(el => el.classList.remove("select-none"));
 
-      canvas.addEventListener("mousedown", function(e) {
-        let target = e.target.closest("span.rounded-full, i, svg, [class*='rounded-full']") || e.target;
-        
-        if (!isDecorativeElement(target)) {
-          const parentFlex = e.target.closest(".flex");
-          if (parentFlex) {
-            const siblingDot = parentFlex.querySelector("span.rounded-full, i, svg");
-            if (siblingDot && isDecorativeElement(siblingDot)) {
-              target = siblingDot;
-            }
-          }
-        }
-
-        if (!isDecorativeElement(target)) {
-          if (!e.target.closest("#iconActionPopup")) hideIconPopup();
+      // مراقبة تظليل النصوص لإظهار شريط التعديل والحذف فوق الكلمة أو العبارة المحددة
+      document.addEventListener("selectionchange", function() {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
           return;
         }
 
-        e.preventDefault();
-        e.stopPropagation();
+        const range = selection.getRangeAt(0);
+        if (!canvas.contains(range.commonAncestorContainer)) return;
 
-        activeIconTarget = target;
-        document.querySelectorAll(".active-icon-highlight").forEach(el => el.classList.remove("active-icon-highlight", "ring-2", "ring-amber-400", "rounded"));
-        target.classList.add("active-icon-highlight", "ring-2", "ring-amber-400", "rounded");
+        activeSelectedRange = range.cloneRange();
+        activeIconTarget = range.commonAncestorContainer.nodeType === 1 
+          ? range.commonAncestorContainer 
+          : range.commonAncestorContainer.parentElement;
 
-        popup.classList.remove("hidden");
-        popup.style.display = "flex";
+        const editBtnText = document.getElementById("editActionText");
+        if (editBtnText) editBtnText.innerText = "تعديل التحديد";
 
-        const rect = target.getBoundingClientRect();
-        let topPos = rect.top - 46;
-        if (topPos < 10) topPos = rect.bottom + 8;
-        
-        let leftPos = rect.left + (rect.width / 2) - (popup.offsetWidth / 2);
-        leftPos = Math.max(10, Math.min(window.innerWidth - popup.offsetWidth - 10, leftPos));
+        const rect = range.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          positionFloatingPopup(rect);
+        }
+      });
 
-        popup.style.top = topPos + "px";
-        popup.style.left = leftPos + "px";
-      }, true);
+      // النقر الحر على النصوص بدون إيقاف المؤشر أو حظر الكتابة
+      canvas.addEventListener("mousedown", function(e) {
+        if (e.target.closest("#iconActionPopup")) return;
+
+        let iconEl = e.target.closest("span.rounded-full, i, svg, [class*='rounded-full']");
+        if (iconEl && isDecorativeElement(iconEl)) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          activeIconTarget = iconEl;
+          activeSelectedRange = null;
+
+          const editBtnText = document.getElementById("editActionText");
+          if (editBtnText) editBtnText.innerText = "استبدال بإيموجي";
+
+          document.querySelectorAll(".active-icon-highlight").forEach(el => el.classList.remove("active-icon-highlight", "ring-2", "ring-amber-400", "rounded"));
+          iconEl.classList.add("active-icon-highlight", "ring-2", "ring-amber-400", "rounded");
+
+          positionFloatingPopup(iconEl.getBoundingClientRect());
+          return;
+        }
+
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed) {
+          hideIconPopup();
+        }
+      });
     }
 
     function hideIconPopup() {
@@ -2428,12 +2545,158 @@ ${imgRule}
       }
     }
 
+    /* ==================== محرك الحفظ التلقائي والأرشيف المحلي ==================== */
+    const AUTO_ARCHIVE_STORAGE_KEY = "naif_reports_auto_archive_v1";
+
+    function getLocalArchive() {
+      try {
+        return JSON.parse(localStorage.getItem(AUTO_ARCHIVE_STORAGE_KEY)) || [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function setLocalArchive(list) {
+      try {
+        localStorage.setItem(AUTO_ARCHIVE_STORAGE_KEY, JSON.stringify(list));
+      } catch (e) {
+        console.warn("التخزين المحلي ممتلئ", e);
+      }
+      updateArchiveBadge();
+    }
+
+    function autoSaveCurrentReport() {
+      const canvas = document.getElementById("dynamicPageCanvas");
+      if (!canvas || !canvas.innerHTML.trim() || document.getElementById("emptyHintBox")) return;
+
+      const list = getLocalArchive();
+      const firstHeading = canvas.querySelector("h1, h2, h3, [class*='font-black'], [class*='font-bold']");
+      const title = firstHeading ? firstHeading.innerText.trim().slice(0, 42) : "تقرير وشاهد إنجاز";
+
+      const now = new Date();
+      const dateFormatted = now.toLocaleDateString("ar-SA", { year: "numeric", month: "short", day: "numeric" });
+      const timeFormatted = now.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" });
+
+      // منع التكرار إذا كان التقرير نفسه موجوداً بالفعل في أعلى الأرشيف
+      if (list.length > 0 && list[0].html === canvas.innerHTML) return;
+
+      const newEntry = {
+        id: "rep_" + Date.now(),
+        title: title || "تقرير وشاهد أداء",
+        date: `${dateFormatted} (${timeFormatted})`,
+        html: canvas.innerHTML
+      };
+
+      list.unshift(newEntry);
+      if (list.length > 25) list.pop(); // سقف أقصى 25 تقريراً لتفادي ثقل المتصفح
+      setLocalArchive(list);
+    }
+
+    function updateArchiveBadge() {
+      const list = getLocalArchive();
+      const badge = document.getElementById("archiveCountBadge");
+      if (badge) badge.innerText = `التقارير السابقة (${list.length})`;
+    }
+
+    function toggleArchiveDropdown() {
+      const panel = document.getElementById("archiveDropdownPanel");
+      if (!panel) return;
+      panel.classList.toggle("hidden");
+      if (!panel.classList.contains("hidden")) renderArchiveList();
+    }
+
+    function renderArchiveList() {
+      const list = getLocalArchive();
+      const container = document.getElementById("archiveItemsList");
+      if (!container) return;
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-5 text-slate-400">
+            <i class="fa-regular fa-folder-open text-2xl mb-1.5 opacity-40"></i>
+            <p class="text-[10px]">لا توجد تقارير محفوظة تلقائياً حتى الآن</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = "";
+      list.forEach(item => {
+        html += `
+          <div class="flex items-center justify-between p-2 rounded-lg bg-slate-800/90 hover:bg-slate-800 border border-slate-700/80 transition group">
+            <div class="flex-1 cursor-pointer overflow-hidden pl-1" onclick="restoreArchivedReport('${item.id}')" title="انقر لاسترجاع هذا التقرير">
+              <p class="font-bold text-white text-[11px] truncate group-hover:text-amber-300 transition">${item.title}</p>
+              <p class="text-[9px] text-slate-400 mt-0.5"><i class="fa-regular fa-calendar-check text-emerald-400"></i> ${item.date}</p>
+            </div>
+            <button type="button" onclick="deleteSingleArchiveReport('${item.id}', event)" class="w-6 h-6 rounded bg-rose-950/40 hover:bg-rose-700 text-rose-400 hover:text-white flex items-center justify-center transition shrink-0" title="حذف هذا التقرير فقط">
+              <i class="fa-solid fa-trash-can text-[10px]"></i>
+            </button>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function restoreArchivedReport(id) {
+      const list = getLocalArchive();
+      const report = list.find(r => r.id === id);
+      if (!report) return;
+
+      const canvas = document.getElementById("dynamicPageCanvas");
+      canvas.innerHTML = report.html;
+
+      const textElements = canvas.querySelectorAll("p, span, h1, h2, h3, h4, h5, h6, td, th, li, strong");
+      textElements.forEach(el => {
+        if (!el.hasAttribute("contenteditable")) {
+          el.setAttribute("contenteditable", "true");
+        }
+      });
+
+      checkAndToggleImageUploadButton();
+      prepareDecorativeElements();
+      initIconInspector();
+
+      const panel = document.getElementById("archiveDropdownPanel");
+      if (panel) panel.classList.add("hidden");
+
+      showToast("تمت استعادة التقرير بنجاح! 📄✨");
+    }
+
+    function deleteSingleArchiveReport(id, event) {
+      if (event) event.stopPropagation();
+      let list = getLocalArchive();
+      list = list.filter(r => r.id !== id);
+      setLocalArchive(list);
+      renderArchiveList();
+      showToast("تم حذف التقرير من الأرشيف");
+    }
+
+    function clearAllArchiveReports() {
+      const list = getLocalArchive();
+      if (list.length === 0) return;
+      if (confirm("هل تريد بالتأكيد حذف كل التقارير السابقة وتفريغ الذاكرة؟")) {
+        localStorage.removeItem(AUTO_ARCHIVE_STORAGE_KEY);
+        updateArchiveBadge();
+        renderArchiveList();
+        showToast("تم تفريغ كافة التقارير السابقة بنجاح 🗑️");
+      }
+    }
+
+    document.addEventListener("click", function(e) {
+      const panel = document.getElementById("archiveDropdownPanel");
+      const btn = document.getElementById("archiveToggleBtn");
+      if (panel && !panel.classList.contains("hidden") && !panel.contains(e.target) && !btn.contains(e.target)) {
+        panel.classList.add("hidden");
+      }
+    });
+
     window.addEventListener("DOMContentLoaded", () => {
       initQRCode();
       setupPasteSupport();
       setInterval(checkPageOverflow, 1200);
       switchPromptMode('files');
       rebindAllSavedOverlays();
+      updateArchiveBadge();
     });
 
     function setExtraLargeImages(mode) {
